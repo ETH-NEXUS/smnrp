@@ -5,7 +5,7 @@ mkdir -p /etc/letsencrypt/live /etc/nginx/conf.d
 
 while true
 do
-  inotifywait -r --exclude .swp -e create -e modify -e delete -e move /etc/letsencrypt/live /etc/nginx/conf.d
+  inotifywait -r --exclude .swp -e create -e modify -e delete -e move /etc/letsencrypt/live
   nginx -t
   if [ $? -eq 0 ]; then
     echo "Detected Nginx change"

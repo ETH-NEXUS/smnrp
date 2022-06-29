@@ -14,12 +14,13 @@ RUN mkdir -p /web_root
 RUN mkdir -p /var/www/certbot
 
 # Copy the nginx configurtion files
-COPY ./nginx/nginx.conf /etc/nginx.conf
+COPY ./nginx/nginx.conf /etc/nginx/nginx.conf
 COPY ./nginx/conf.d /etc/nginx/conf.d
 
 # Copy the entrypoint
 COPY ./entrypoint.sh /entrypoint.sh
 COPY ./reloader.sh /reloader.sh
-RUN chmod 755 /entrypoint.sh /reloader.sh
+COPY ./renewer.sh /renewer.sh
+RUN chmod 755 /entrypoint.sh /reloader.sh /renewer.sh
 
 ENTRYPOINT [ "/entrypoint.sh" ]
