@@ -15,14 +15,13 @@ echo "### Generating configuration files based on enviroment"
 default_config='/etc/nginx/conf.d/default.conf'
 rm -f ${default_config}
 readarray -d , -t domains <<< "${DOMAINS}"
-for domain in ${domains[@]}
-do
-  echo "### Domain: ${domain}"
-  cat >> ${default_config} << EOF
+domain=${domains[0]}
+echo "### Domain: ${domain}"
+cat >> ${default_config} << EOF
 server {
-  listen 443 ssl http2;
-  listen [::]:443 ssl http2;
-  server_name ${domain};
+  listen 443 ssl http2 default_server;
+  listen [::]:443 ssl http2 default_server;
+  server_name _;
 
   ssl_certificate "/etc/letsencrypt/live/${domain}/fullchain.pem";
   ssl_certificate_key "/etc/letsencrypt/live/${domain}/privkey.pem";
@@ -52,7 +51,6 @@ server {
   include /etc/nginx/conf.d/locations.nginx;
 }
 EOF
-done
 
 upstream_config='/etc/nginx/conf.d/upstreams.nginx'
 readarray -d , -t upstreams <<< "${UPSTREAMS}"
@@ -139,8 +137,6 @@ wait -n
 
 echo "### Requesting Let's Encrypt certificate for ${DOMAINS} ..."
 certbot certonly --webroot -w /var/www/certbot \
-  --staging \
-  --debug \
   --register-unsafely-without-email \
   -d ${DOMAINS} \
   --rsa-key-size $rsa_key_size \
@@ -158,9 +154,10 @@ wait -n
 echo "### Staring nginx reloader in background"
 sh -c "/reloader.sh" &
 
-# We start the certbot observer to check every 12h if a certificate has expired
-echo "### Staring certbot renewal in background"
-# sh -c "/bin/sh -c 'trap exit TERM; while :; do certbot renew; sleep 12h & wait $!; done;'" &
-sh -c "/renewer.sh" &
-
-$@
+if [ ! -z $@ ]; then
+  $@
+else
+  # We start the certbot observer to check every 12h if a certificate has expired
+  echo "### Staring certbot renewal in background"
+  sh -c "/renewer.sh"
+fi
