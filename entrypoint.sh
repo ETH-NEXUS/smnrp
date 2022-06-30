@@ -1,20 +1,20 @@
 #!/usr/bin/env bash
 
-if [ -z ${DOMAINS} ] || [ -z ${UPSTREAMS} ]; then
+if [ -z ${SMNRP_DOMAINS} ] || [ -z ${SMNRP_UPSTREAMS} ]; then
   echo "### The following environment variables need to be set"
-  echo "  DOMAINS            : comma seperated list of domains"
-  echo "  UPSTREAMS          : comma seperated list of upstreams (for the same application)"
-  echo "  UPSTREAM_PROTOCOL  : the protocol used for upstreams (http or https)"
+  echo "  SMNRP_DOMAINS            : comma seperated list of domains"
+  echo "  SMNRP_UPSTREAMS          : comma seperated list of upstreams (for the same application)"
+  echo "  SMNRP_UPSTREAM_PROTOCOL  : the protocol used for upstreams (http or https)"
   echo ""
   echo "### The following environment variables optional to be set"
-  echo "  LOCATIONS          : comma seperated list of locations (for the same application)"
+  echo "  SMNRP_LOCATIONS          : comma seperated list of locations (for the same application)"
   exit 1
 fi
 
 echo "### Generating configuration files based on enviroment"
 default_config='/etc/nginx/conf.d/default.conf'
 rm -f ${default_config}
-readarray -d , -t domains <<< "${DOMAINS}"
+readarray -d , -t domains <<< "${SMNRP_DOMAINS}"
 domain=${domains[0]}
 echo "### Domain: ${domain}"
 cat >> ${default_config} << EOF
@@ -53,7 +53,7 @@ server {
 EOF
 
 upstream_config='/etc/nginx/conf.d/upstreams.nginx'
-readarray -d , -t upstreams <<< "${UPSTREAMS}"
+readarray -d , -t upstreams <<< "${SMNRP_UPSTREAMS}"
 echo "upstream targets {" > ${upstream_config}
 for upstream in ${upstreams[@]}
 do
@@ -64,13 +64,13 @@ echo "}" >> ${upstream_config}
 
 location_config='/etc/nginx/conf.d/locations.nginx'
 rm -f ${location_config}
-readarray -d , -t locations <<< "${LOCATIONS}"
+readarray -d , -t locations <<< "${SMNRP_LOCATIONS}"
 cat >> ${location_config} << EOF
 location /.well-known/acme-challenge/ {
     root /var/www/certbot;
 }
 EOF
-if [ ! -z ${LOCATIONS} ]; then
+if [ ! -z ${SMNRP_LOCATIONS} ]; then
   for location in ${locations[@]}
   do
     uri=${location%%!*}
@@ -135,10 +135,10 @@ fi
 echo "### Waiting for nginx to start ..."
 wait -n
 
-echo "### Requesting Let's Encrypt certificate for ${DOMAINS} ..."
+echo "### Requesting Let's Encrypt certificate for ${SMNRP_DOMAINS} ..."
 certbot certonly --webroot -w /var/www/certbot \
   --register-unsafely-without-email \
-  -d ${DOMAINS} \
+  -d ${SMNRP_DOMAINS} \
   --rsa-key-size $rsa_key_size \
   --agree-tos \
   --force-renewal
