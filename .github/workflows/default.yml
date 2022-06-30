@@ -13,7 +13,7 @@ jobs:
           DOCKER_USER: ethnexus
           DOCKER_PASS: ${{ secrets.DOCKER_PASS }}
         with:
-          destination_container_repo: my-user/my-repo
+          destination_container_repo: ethnexus/smnrp
           provider: dockerhub
           short_description: 'Secure Multifunctional Nginx Reverse Proxy'
           readme_file: 'README.md'
