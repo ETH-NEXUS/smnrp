@@ -13,6 +13,10 @@ RUN apt-get clean autoclean && apt-get autoremove -y && rm -rf /var/lib/{apt,dpk
 RUN mkdir -p /web_root
 RUN mkdir -p /var/www/certbot
 
+# Add the dh-params to the image
+RUN mkdir -p /etc/letsencrypt
+COPY ./ssl-dhparams.pem /etc/letsencrypt/ssl-dhparams.pem
+
 # Copy the nginx configurtion files
 COPY ./nginx/nginx.conf /etc/nginx/nginx.conf
 COPY ./nginx/conf.d /etc/nginx/conf.d
