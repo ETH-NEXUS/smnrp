@@ -20,7 +20,7 @@ echo "### Domain: ${domain}"
 cat >> ${default_config} << EOF
 server {
   listen 443 ssl http2 default_server;
-  listen [::]:443 ssl http2 default_server;
+  # listen [::]:443 ssl http2 default_server;
   server_name _;
 
   ssl_certificate "/etc/letsencrypt/live/${domain}/fullchain.pem";
@@ -107,17 +107,15 @@ location / {
 EOF
 fi
 
-conf_dir='/etc/letsencrypt'
-rsa_key_size=4096
-
-if [ ! -e "${conf_dir}/ssl-dhparams.pem" ]; then
-  echo "### Downloading recommended TLS parameters ..."
-  mkdir -p "${conf_dir}"
-  # curl -s https://raw.githubusercontent.com/certbot/certbot/master/certbot-nginx/certbot_nginx/_internal/tls_configs/options-ssl-nginx.conf > "${conf_dir}/options-ssl-nginx.conf"
-  # We should chage this to generate dh-params using openssl
-  curl -s https://raw.githubusercontent.com/certbot/certbot/master/certbot/certbot/ssl-dhparams.pem > "${conf_dir}/ssl-dhparams.pem"
-  echo
-fi
+# conf_dir='/etc/letsencrypt'
+# if [ ! -e "${conf_dir}/ssl-dhparams.pem" ]; then
+#   echo "### Downloading recommended TLS parameters ..."
+#   mkdir -p "${conf_dir}"
+#   # curl -s https://raw.githubusercontent.com/certbot/certbot/master/certbot-nginx/certbot_nginx/_internal/tls_configs/options-ssl-nginx.conf > "${conf_dir}/options-ssl-nginx.conf"
+#   # We should chage this to generate dh-params using openssl
+#   curl -s https://raw.githubusercontent.com/certbot/certbot/master/certbot/certbot/ssl-dhparams.pem > "${conf_dir}/ssl-dhparams.pem"
+#   echo
+# fi
 
 # We empty the config and leave only certbot.conf
 mkdir -p /tmp/nginx
@@ -136,6 +134,7 @@ echo "### Waiting for nginx to start ..."
 wait -n
 
 echo "### Requesting Let's Encrypt certificate for ${SMNRP_DOMAINS} ..."
+rsa_key_size=4096
 certbot certonly --webroot -w /var/www/certbot \
   --register-unsafely-without-email \
   -d ${SMNRP_DOMAINS} \

@@ -1,3 +1,3 @@
 docker:
-	@docker build . -t ethnexus/smnrp
+	@docker build --no-cache . -t ethnexus/smnrp
 	@docker push ethnexus/smnrp
