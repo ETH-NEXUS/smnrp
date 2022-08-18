@@ -53,6 +53,10 @@ location <path> {
 If you want to redirect to the configured upstream(s) you can use `targets` as the server name. If you want to redirect to another docker contatiner you need to use the _service name_ of the particular application.
 If you only want to proxy to other servers, just leave `SMNRP_LOCATIONS` empty.
 
+### `SMNRP_SELF_SIGNED`
+
+If set to `true` smnrp is generating self signed certificates instead of gathering it from Let's Encrypt.
+
 ## Integration into `docker-compose`
 
 To integrate `SMNRP` into docker compose to setup a reverse proxy to the application you just need to add the following part into you `docker-compose.yml`:

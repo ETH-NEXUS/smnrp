@@ -14,7 +14,7 @@ fi
 echo "### Generating configuration files based on enviroment"
 default_config='/etc/nginx/conf.d/default.conf'
 rm -f ${default_config}
-readarray -d , -t domains <<< "${SMNRP_DOMAINS}"
+readarray -d , -t domains < <(printf '%s' "${SMNRP_DOMAINS}")
 domain=${domains[0]}
 echo "### Domain: ${domain}"
 cat >> ${default_config} << EOF
@@ -53,7 +53,7 @@ server {
 EOF
 
 upstream_config='/etc/nginx/conf.d/upstreams.nginx'
-readarray -d , -t upstreams <<< "${SMNRP_UPSTREAMS}"
+readarray -d , -t upstreams < <(printf '%s'  "${SMNRP_UPSTREAMS}")
 echo "upstream targets {" > ${upstream_config}
 for upstream in ${upstreams[@]}
 do
@@ -64,7 +64,7 @@ echo "}" >> ${upstream_config}
 
 location_config='/etc/nginx/conf.d/locations.nginx'
 rm -f ${location_config}
-readarray -d , -t locations <<< "${SMNRP_LOCATIONS}"
+readarray -d , -t locations < <(printf '%s' "${SMNRP_LOCATIONS}")
 cat >> ${location_config} << EOF
 location /.well-known/acme-challenge/ {
     root /var/www/certbot;
@@ -133,14 +133,84 @@ fi
 echo "### Waiting for nginx to start ..."
 wait -n
 
-echo "### Requesting Let's Encrypt certificate for ${SMNRP_DOMAINS} ..."
-rsa_key_size=4096
-certbot certonly --webroot -w /var/www/certbot \
-  --register-unsafely-without-email \
-  -d ${SMNRP_DOMAINS} \
-  --rsa-key-size $rsa_key_size \
-  --agree-tos \
-  --force-renewal
+if [ "${SMNRP_SELF_SIGNED}" == 'true' ]; then
+  echo "### Generating self signed certificate for ${SMNRP_DOMAINS} ..."
+  mkdir -p /etc/letsencrypt/rootCA
+  mkdir -p /etc/letsencrypt/live/${domain}
+  if [[ ! -f /etc/letsencrypt/rootCA/rootCA.crt ]]; then
+    openssl req -x509 \
+            -sha256 -days 3560 \
+            -nodes \
+            -newkey rsa:2048 \
+            -subj "/CN=${domain}/C=CH/L=Zurich" \
+            -keyout /etc/letsencrypt/rootCA/rootCA.key \
+            -out /etc/letsencrypt/rootCA/rootCA.crt
+  fi
+  if [[ ! -f /etc/letsencrypt/live/${domain}/privkey.pem ]]; then
+    openssl genrsa -out /etc/letsencrypt/live/${domain}/privkey.pem 2048
+  fi
+  if [[ ! -f /etc/letsencrypt/live/${domain}/csr.conf ]]; then
+    cat > /etc/letsencrypt/live/${domain}/csr.conf << EOF
+[ req ]
+default_bits = 2048
+prompt = no
+default_md = sha256
+req_extensions = req_ext
+distinguished_name = dn
+
+[ dn ]
+C = CH
+ST = Zurich
+L = Zurich
+O = ORG
+OU = UNIT
+CN = ${domain}
+
+[ req_ext ]
+subjectAltName = @alt_names
+
+[ alt_names ]
+EOF
+    ip_cnt=1
+    dns_cnt=1
+    for entry in "${domains[@]}"
+    do
+      if [[ $enty =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+        echo "IP.${ip_cnt} = ${entry}" >> /etc/letsencrypt/live/${domain}/csr.conf
+        (( ip_cnt++ ))
+      else
+        echo "DNS.${dns_cnt} = ${entry}" >> /etc/letsencrypt/live/${domain}/csr.conf
+        (( dns_cnt++ ))
+      fi
+    done
+  fi
+  if [[ ! -f /etc/letsencrypt/live/${domain}/server.csr ]]; then
+    openssl req -new \
+      -key /etc/letsencrypt/live/${domain}/privkey.pem \
+      -out /etc/letsencrypt/live/${domain}/server.csr \
+      -config /etc/letsencrypt/live/${domain}/csr.conf
+  fi
+  if [[ ! -f /etc/letsencrypt/live/${domain}/fullchain.pem ]]; then
+    openssl x509 -req \
+      -in /etc/letsencrypt/live/${domain}/server.csr \
+      -CA /etc/letsencrypt/rootCA/rootCA.crt \
+      -CAkey /etc/letsencrypt/rootCA/rootCA.key \
+      -CAcreateserial \
+      -out /etc/letsencrypt/live/${domain}/fullchain.pem \
+      -days 365 \
+      -sha256 
+      #-extfile cert.conf
+  fi
+else
+  echo "### Requesting Let's Encrypt certificate for ${SMNRP_DOMAINS} ..."
+  rsa_key_size=4096
+  certbot certonly --webroot -w /var/www/certbot \
+    --register-unsafely-without-email \
+    -d ${SMNRP_DOMAINS} \
+    --rsa-key-size $rsa_key_size \
+    --agree-tos \
+    --force-renewal
+fi
 
 # We move back the original config
 mv /tmp/nginx/*.conf /etc/nginx/conf.d/. 
