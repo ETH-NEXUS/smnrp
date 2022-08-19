@@ -58,6 +58,10 @@ If you only want to proxy to other servers, just leave `SMNRP_LOCATIONS` empty.
 
 If set to `true` smnrp is generating self signed certificates instead of gathering it from Let's Encrypt.
 
+### `SMNRP_SELF_SIGNED_RENEW`
+
+If set to `true` smnrp will regenerate the self signed certificate on each start.
+
 ## Integration into `docker-compose`
 
 To integrate `SMNRP` into docker compose to setup a reverse proxy to the application you just need to add the following part into you `docker-compose.yml`:
