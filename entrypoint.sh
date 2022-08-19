@@ -107,16 +107,6 @@ location / {
 EOF
 fi
 
-# conf_dir='/etc/letsencrypt'
-# if [ ! -e "${conf_dir}/ssl-dhparams.pem" ]; then
-#   echo "### Downloading recommended TLS parameters ..."
-#   mkdir -p "${conf_dir}"
-#   # curl -s https://raw.githubusercontent.com/certbot/certbot/master/certbot-nginx/certbot_nginx/_internal/tls_configs/options-ssl-nginx.conf > "${conf_dir}/options-ssl-nginx.conf"
-#   # We should chage this to generate dh-params using openssl
-#   curl -s https://raw.githubusercontent.com/certbot/certbot/master/certbot/certbot/ssl-dhparams.pem > "${conf_dir}/ssl-dhparams.pem"
-#   echo
-# fi
-
 # We empty the config and leave only certbot.conf
 mkdir -p /tmp/nginx
 mv /etc/nginx/conf.d/*.conf /tmp/nginx/.
@@ -135,38 +125,29 @@ wait -n
 
 if [ "${SMNRP_SELF_SIGNED}" == 'true' ]; then
   echo "### Generating self signed certificate for ${SMNRP_DOMAINS} ..."
-  mkdir -p /etc/letsencrypt/rootCA
+  # mkdir -p /etc/letsencrypt/rootCA
   mkdir -p /etc/letsencrypt/live/${domain}
-  if [[ ! -f /etc/letsencrypt/rootCA/rootCA.crt ]]; then
-    openssl req -x509 \
-            -sha256 -days 3560 \
-            -nodes \
-            -newkey rsa:2048 \
-            -subj "/CN=${domain}/C=CH/L=Zurich" \
-            -keyout /etc/letsencrypt/rootCA/rootCA.key \
-            -out /etc/letsencrypt/rootCA/rootCA.crt
-  fi
-  if [[ ! -f /etc/letsencrypt/live/${domain}/privkey.pem ]]; then
-    openssl genrsa -out /etc/letsencrypt/live/${domain}/privkey.pem 2048
-  fi
-  if [[ ! -f /etc/letsencrypt/live/${domain}/csr.conf ]]; then
+  if [[ "${SMNRP_SELF_SIGNED_RENEW}" == 'true' ]] || [[ ! -f /etc/letsencrypt/live/${domain}/csr.conf ]]; then
     cat > /etc/letsencrypt/live/${domain}/csr.conf << EOF
 [ req ]
 default_bits = 2048
-prompt = no
 default_md = sha256
 req_extensions = req_ext
+x509_extensions = v3_req
 distinguished_name = dn
+prompt = no
 
 [ dn ]
-C = CH
-ST = Zurich
-L = Zurich
-O = ORG
-OU = UNIT
+C = XX
+ST = N/A
+L = N/A
+O = Self-signed certificate
 CN = ${domain}
 
 [ req_ext ]
+subjectAltName = @alt_names
+
+[ v3_req ]
 subjectAltName = @alt_names
 
 [ alt_names ]
@@ -175,7 +156,7 @@ EOF
     dns_cnt=1
     for entry in "${domains[@]}"
     do
-      if [[ $enty =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+      if [[ $entry =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
         echo "IP.${ip_cnt} = ${entry}" >> /etc/letsencrypt/live/${domain}/csr.conf
         (( ip_cnt++ ))
       else
@@ -184,22 +165,15 @@ EOF
       fi
     done
   fi
-  if [[ ! -f /etc/letsencrypt/live/${domain}/server.csr ]]; then
-    openssl req -new \
-      -key /etc/letsencrypt/live/${domain}/privkey.pem \
-      -out /etc/letsencrypt/live/${domain}/server.csr \
-      -config /etc/letsencrypt/live/${domain}/csr.conf
-  fi
-  if [[ ! -f /etc/letsencrypt/live/${domain}/fullchain.pem ]]; then
-    openssl x509 -req \
-      -in /etc/letsencrypt/live/${domain}/server.csr \
-      -CA /etc/letsencrypt/rootCA/rootCA.crt \
-      -CAkey /etc/letsencrypt/rootCA/rootCA.key \
-      -CAcreateserial \
+  if [[ "${SMNRP_SELF_SIGNED_RENEW}" == 'true' ]] || [[ ! -f /etc/letsencrypt/live/${domain}/fullchain.pem ]]; then
+    openssl req \
+      -x509 \
+      -nodes \
+      -days 3650 \
+      -newkey rsa:4096 \
+      -keyout /etc/letsencrypt/live/${domain}/privkey.pem \
       -out /etc/letsencrypt/live/${domain}/fullchain.pem \
-      -days 365 \
-      -sha256 
-      #-extfile cert.conf
+      -config /etc/letsencrypt/live/${domain}/csr.conf
   fi
 else
   echo "### Requesting Let's Encrypt certificate for ${SMNRP_DOMAINS} ..."

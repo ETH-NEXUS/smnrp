@@ -15,6 +15,7 @@ SMNRP_DOMAINS=domain.com,www.domain.com
 SMNRP_UPSTREAMS=app.server1.com:443,app.server2.com:443
 SMNRP_UPSTREAM_PROTOCOL=https
 SMNRP_LOCATIONS=/api/!https://targets/api/,/api/static!/usr/share/static
+SMNRP_SELF_SIGNED=false
 ```
 
 ### `SMNRP_DOMAINS`
