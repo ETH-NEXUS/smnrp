@@ -20,19 +20,19 @@ SMNRP_SELF_SIGNED=false
 
 ### `SMNRP_DOMAINS`
 
-Define a comma separated list of domains you want to have included in the https certificate.
+(required) Define a comma separated list of domains you want to have included in the https certificate.
 
 ### `SMNRP_UPSTREAMS`
 
-Define the upstream servers in a comma separated list. The upstreams can be referenced in the `SMNRP_LOCATIONS` as `targets`.
+(optional) Define the upstream servers in a comma separated list. The upstreams can be referenced in the `SMNRP_LOCATIONS` as `targets`. If this setting is not given the `/web_root` is served.
 
 ### `SMNRP_UPSTREAM_PROTOCOL`
 
-Define the protocoll to be used to communicate with the upstreams. This can be ether `http` or `https`.
+(optional) Define the protocoll to be used to communicate with the upstreams. This can be ether `http` or `https`.
 
 ### `SMNRP_LOCATIONS`
 
-Define additional locations you want to support. This is essential if you use `SMNRP` as a simple proxy for your web application. The definitions are comma separated and consists of two parts `path!alias|proxy_url`. An `alias` need to be configured as a path (e.g. `/usr/share/static`). A `proxy_url` need to be configured as a url (e.g. `https://targets/api/`). The two parts are separated by a `!`. 
+(optional) Define additional locations you want to support. This is essential if you use `SMNRP` as a simple proxy for your web application. The definitions are comma separated and consists of two parts `path!alias|proxy_url`. An `alias` need to be configured as a path (e.g. `/usr/share/static`). A `proxy_url` need to be configured as a url (e.g. `https://targets/api/`). The two parts are separated by a `!`. 
 Basically the translation inside the Nginx config is
 
 - for an `alias`:
