@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
 
-if [ -z ${SMNRP_DOMAINS} ] || [ -z ${SMNRP_UPSTREAMS} ]; then
+if [ -z ${SMNRP_DOMAINS} ]; then
   echo "### The following environment variables need to be set"
   echo "  SMNRP_DOMAINS            : comma seperated list of domains"
-  echo "  SMNRP_UPSTREAMS          : comma seperated list of upstreams (for the same application)"
-  echo "  SMNRP_UPSTREAM_PROTOCOL  : the protocol used for upstreams (http or https)"
   echo ""
   echo "### The following environment variables optional to be set"
+  echo "  SMNRP_UPSTREAMS          : comma seperated list of upstreams (for the same application)"
+  echo "  SMNRP_UPSTREAM_PROTOCOL  : the protocol used for upstreams (http or https)"
   echo "  SMNRP_LOCATIONS          : comma seperated list of locations (for the same application)"
   exit 1
 fi
@@ -53,14 +53,18 @@ server {
 EOF
 
 upstream_config='/etc/nginx/conf.d/upstreams.nginx'
-readarray -d , -t upstreams < <(printf '%s'  "${SMNRP_UPSTREAMS}")
-echo "upstream targets {" > ${upstream_config}
-for upstream in ${upstreams[@]}
-do
-  echo "### Upstream: ${upstream}"
-  echo "  server ${upstream} max_fails=3 fail_timeout=10s;" >> ${upstream_config}
-done
-echo "}" >> ${upstream_config}
+if [ ! -z ${SMNRP_UPSTREAMS} ]; then
+  readarray -d , -t upstreams < <(printf '%s'  "${SMNRP_UPSTREAMS}")
+  echo "upstream targets {" > ${upstream_config}
+  for upstream in ${upstreams[@]}
+  do
+    echo "### Upstream: ${upstream}"
+    echo "  server ${upstream} max_fails=3 fail_timeout=10s;" >> ${upstream_config}
+  done
+  echo "}" >> ${upstream_config}
+else
+  touch ${upstream_config}
+fi
 
 location_config='/etc/nginx/conf.d/locations.nginx'
 rm -f ${location_config}
@@ -99,12 +103,14 @@ location / {
 }
 EOF
 else
-  cat >> ${location_config} << EOF
+  if [ ! -z ${SMNRP_UPSTREAMS} ]; then
+    cat >> ${location_config} << EOF
 location / {
   proxy_next_upstream error timeout http_503;
   proxy_pass https://targets;
 }
 EOF
+  fi
 fi
 
 # We empty the config and leave only certbot.conf
