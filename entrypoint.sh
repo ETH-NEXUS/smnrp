@@ -129,12 +129,15 @@ fi
 echo "### Waiting for nginx to start ..."
 wait -n
 
-if [ "${SMNRP_SELF_SIGNED}" == 'true' ]; then
-  echo "### Generating self signed certificate for ${SMNRP_DOMAINS} ..."
-  # mkdir -p /etc/letsencrypt/rootCA
-  mkdir -p /etc/letsencrypt/live/${domain}
-  if [[ "${SMNRP_SELF_SIGNED_RENEW}" == 'true' ]] || [[ ! -f /etc/letsencrypt/live/${domain}/csr.conf ]]; then
-    cat > /etc/letsencrypt/live/${domain}/csr.conf << EOF
+if [ "${SMNRP_OWN_CERT}" == "true" ]; then
+  echo "### Using own certificate for ${SMNRP_DOMAINS} ..."
+else
+  if [ "${SMNRP_SELF_SIGNED}" == 'true' ]; then
+    echo "### Generating self signed certificate for ${SMNRP_DOMAINS} ..."
+    # mkdir -p /etc/letsencrypt/rootCA
+    mkdir -p /etc/letsencrypt/live/${domain}
+    if [[ "${SMNRP_SELF_SIGNED_RENEW}" == 'true' ]] || [[ ! -f /etc/letsencrypt/live/${domain}/csr.conf ]]; then
+      cat > /etc/letsencrypt/live/${domain}/csr.conf << EOF
 [ req ]
 default_bits = 2048
 default_md = sha256
@@ -158,38 +161,39 @@ subjectAltName = @alt_names
 
 [ alt_names ]
 EOF
-    ip_cnt=1
-    dns_cnt=1
-    for entry in "${domains[@]}"
-    do
-      if [[ $entry =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
-        echo "IP.${ip_cnt} = ${entry}" >> /etc/letsencrypt/live/${domain}/csr.conf
-        (( ip_cnt++ ))
-      else
-        echo "DNS.${dns_cnt} = ${entry}" >> /etc/letsencrypt/live/${domain}/csr.conf
-        (( dns_cnt++ ))
-      fi
-    done
+      ip_cnt=1
+      dns_cnt=1
+      for entry in "${domains[@]}"
+      do
+        if [[ $entry =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+          echo "IP.${ip_cnt} = ${entry}" >> /etc/letsencrypt/live/${domain}/csr.conf
+          (( ip_cnt++ ))
+        else
+          echo "DNS.${dns_cnt} = ${entry}" >> /etc/letsencrypt/live/${domain}/csr.conf
+          (( dns_cnt++ ))
+        fi
+      done
+    fi
+    if [[ "${SMNRP_SELF_SIGNED_RENEW}" == 'true' ]] || [[ ! -f /etc/letsencrypt/live/${domain}/fullchain.pem ]]; then
+      openssl req \
+        -x509 \
+        -nodes \
+        -days 3650 \
+        -newkey rsa:4096 \
+        -keyout /etc/letsencrypt/live/${domain}/privkey.pem \
+        -out /etc/letsencrypt/live/${domain}/fullchain.pem \
+        -config /etc/letsencrypt/live/${domain}/csr.conf
+    fi
+  else
+    echo "### Requesting Let's Encrypt certificate for ${SMNRP_DOMAINS} ..."
+    rsa_key_size=4096
+    certbot certonly --webroot -w /var/www/certbot \
+      --register-unsafely-without-email \
+      -d ${SMNRP_DOMAINS} \
+      --rsa-key-size $rsa_key_size \
+      --agree-tos \
+      --force-renewal
   fi
-  if [[ "${SMNRP_SELF_SIGNED_RENEW}" == 'true' ]] || [[ ! -f /etc/letsencrypt/live/${domain}/fullchain.pem ]]; then
-    openssl req \
-      -x509 \
-      -nodes \
-      -days 3650 \
-      -newkey rsa:4096 \
-      -keyout /etc/letsencrypt/live/${domain}/privkey.pem \
-      -out /etc/letsencrypt/live/${domain}/fullchain.pem \
-      -config /etc/letsencrypt/live/${domain}/csr.conf
-  fi
-else
-  echo "### Requesting Let's Encrypt certificate for ${SMNRP_DOMAINS} ..."
-  rsa_key_size=4096
-  certbot certonly --webroot -w /var/www/certbot \
-    --register-unsafely-without-email \
-    -d ${SMNRP_DOMAINS} \
-    --rsa-key-size $rsa_key_size \
-    --agree-tos \
-    --force-renewal
 fi
 
 # We move back the original config

@@ -62,6 +62,15 @@ If set to `true` smnrp is generating self signed certificates instead of gatheri
 
 If set to `true` smnrp will regenerate the self signed certificate on each start.
 
+### `SMNRP_OWN_CERT`
+
+If set to `true` smnrp will not create any certificate but it requires the following two files to be mapped into 
+the container (i.e. as docker read-only volume):
+
+- `/etc/letsencrypt/live/${domain}/fullchain.pem`
+- `/etc/letsencrypt/live/${domain}/privkey.pem`
+
+> Replace the `${domain}` with the first domain name in `SMNRP_DOMAINS`.
 ## Integration into `docker-compose`
 
 To integrate `SMNRP` into docker compose to setup a reverse proxy to the application you just need to add the following part into you `docker-compose.yml`:
