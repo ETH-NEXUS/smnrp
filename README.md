@@ -70,6 +70,18 @@ the container (i.e. as docker read-only volume):
 - `/etc/letsencrypt/live/${domain}/fullchain.pem`
 - `/etc/letsencrypt/live/${domain}/privkey.pem`
 
+Here is an example:
+
+```yaml
+  ...
+  ws:
+    image: ethnexus/smnrp
+    volumes:
+      ...
+      - /etc/pki/tls/certs2022/careapp.ethz.ch.pem:/etc/letsencrypt/live/careapp.ethz.ch/fullchain.pem:ro
+      - /etc/pki/tls/certs2022/careapp.ethz.ch.key:/etc/letsencrypt/live/careapp.ethz.ch/privkey.pem:ro
+```
+
 > Replace the `${domain}` with the first domain name in `SMNRP_DOMAINS`.
 ## Integration into `docker-compose`
 
