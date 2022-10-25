@@ -185,14 +185,18 @@ EOF
         -config /etc/letsencrypt/live/${domain}/csr.conf
     fi
   else
-    echo "### Requesting Let's Encrypt certificate for ${SMNRP_DOMAINS} ..."
-    rsa_key_size=4096
-    certbot certonly --webroot -w /var/www/certbot \
-      --register-unsafely-without-email \
-      -d ${SMNRP_DOMAINS} \
-      --rsa-key-size $rsa_key_size \
-      --agree-tos \
-      --force-renewal
+    if [[ "${SMNRP_REQUEST_ON_BOOT}" == 'true' ]] || [[ ! -f /etc/letsencrypt/live/${domain}/fullchain.pem ]]; then
+      echo "### Requesting Let's Encrypt certificate for ${SMNRP_DOMAINS} ..."
+      rsa_key_size=4096
+      certbot certonly --webroot -w /var/www/certbot \
+        --register-unsafely-without-email \
+        -d ${SMNRP_DOMAINS} \
+        --rsa-key-size $rsa_key_size \
+        --agree-tos \
+        --force-renewal
+    else
+      echo "### No new Let's Encrypt certificate request needed for ${SMNRP_DOMAINS} ..."
+    fi
   fi
 fi
 
