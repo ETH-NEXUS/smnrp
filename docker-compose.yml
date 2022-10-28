@@ -1,12 +1,8 @@
 version: "3"
-volumes:
-  smnrp_live:
 services:
   smnrp:
     build: .
     ports: 
       - "80:80"
       - "443:443"
-    volumes:
-      - "smnrp_live:/etc/letsencrypt/live"
     env_file: .env

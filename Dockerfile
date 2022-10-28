@@ -1,5 +1,10 @@
 FROM nginx:mainline
 
+# Define a volume for /etc/letsencrypt/live
+# to make sure the requested certificates
+# are persistent
+VOLUME /etc/letsencrypt/live
+
 # Install the requirements
 RUN apt-get update && apt-get install -y \
   certbot \
