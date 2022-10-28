@@ -11,6 +11,13 @@ RUN apt-get clean autoclean && apt-get autoremove -y && rm -rf /var/lib/{apt,dpk
 
 # Cerate the web root directory
 RUN mkdir -p /web_root
+
+# Copy an initial index html to the webroot
+# normaly you would mount a directory
+# to the webroot what will shadow this default
+COPY ./nginx/index.html /web_root/index.html
+
+# Create the webroot for certbot
 RUN mkdir -p /var/www/certbot
 
 # Add the dh-params to the image
@@ -20,6 +27,10 @@ COPY ./ssl-dhparams.pem /etc/letsencrypt/ssl-dhparams.pem
 # Copy the nginx configurtion files
 COPY ./nginx/nginx.conf /etc/nginx/nginx.conf
 COPY ./nginx/conf.d /etc/nginx/conf.d
+
+# Copy the errorpages
+RUN mkdir -p /usr/share/nginx/html/error
+COPY ./nginx/errorpages/* /usr/share/nginx/html/error/.
 
 # Copy the entrypoint
 COPY ./entrypoint.sh /entrypoint.sh

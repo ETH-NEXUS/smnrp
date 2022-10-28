@@ -48,6 +48,7 @@ server {
   root /web_root;
   index index.html;
 
+  include /etc/nginx/conf.d/errorpages.nginx;
   include /etc/nginx/conf.d/locations.nginx;
 }
 EOF
