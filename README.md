@@ -16,6 +16,8 @@ SMNRP_UPSTREAMS=app.server1.com:443,app.server2.com:443
 SMNRP_UPSTREAM_PROTOCOL=https
 SMNRP_LOCATIONS=/api/!https://targets/api/,/api/static!/usr/share/static
 SMNRP_SELF_SIGNED=false
+SMNRP_SELF_SIGNED_RENEW=false
+SMNRP_OWN_CERT=false
 ```
 
 ### `SMNRP_DOMAINS`
@@ -95,11 +97,13 @@ To integrate `SMNRP` into docker compose to setup a reverse proxy to the applica
 version: "3"
 volumes:
   web_root:
+  smnrp_live:
 services:
   ws:
     image: ethnexus/smnrp
     volumes: 
       - "web_root:/web_root:ro"
+      - "smnrp_live:/etc/letsencrypt/live"
     ports:
       - "80:80"
       - "443:443"
