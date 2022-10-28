@@ -1,8 +1,50 @@
+<!DOCTYPE html>
 <html>
 <head>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Rubik">
 <title>SMNRP</title>
+<style>
+body {
+  background-image: linear-gradient(
+      rgba(255, 255, 255, 0.8), 
+      rgba(255, 255, 255, 0.8)
+    ), url(background.jpg);
+  background-repeat: repeat-y;
+  background-size: cover;
+  font-family: Rubik;
+}
+.center {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -60%);
+  padding: 10px;
+  font-size: 60px;
+  font-weight: bold;
+  color: rgba(40, 40, 40, 0.8);
+  text-align: center;
+}
+.message {
+  font-size: 40px;
+  font-weight: normal;
+}
+.link {
+  margin-top: 20px;
+}
+.link a {
+  color: rgba(40, 40, 40, 0.8);
+  text-decoration: none;
+}
+</style>
 </head>
 <body>
-  <h1> Welcome to SMNRP </h1>
+    <div class="center"> 
+      Secure Multifunctional Nginx Reverse Proxy
+      <div class="message">
+        <div class="link" >
+          👉 <a target="_blank" href="https://hub.docker.com/repository/docker/ethnexus/smnrp">CONFIGURATION MANUAL</a> 👈
+        </div>
+      </div>
+    </div>
 </body>
 </html>
