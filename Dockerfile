@@ -16,6 +16,7 @@ RUN mkdir -p /web_root
 # normaly you would mount a directory
 # to the webroot what will shadow this default
 COPY ./nginx/index.html /web_root/index.html
+COPY ./nginx/background.jpg /web_root/background.jpg
 
 # Create the webroot for certbot
 RUN mkdir -p /var/www/certbot
