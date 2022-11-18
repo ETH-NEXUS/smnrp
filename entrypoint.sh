@@ -43,7 +43,7 @@ server {
   include /etc/nginx/conf.d/ocspstapling.nginx;
 
   # enables HSTS for 1 year (31536000 seconds)
-  add_header Strict-Transport-Security "max-age=31536000; includeSubdomains; preload;
+  add_header Strict-Transport-Security "max-age=31536000; includeSubdomains; preload";
 
   add_header X-Frame-Options "SAMEORIGIN";
   add_header X-XSS-Protection "1; mode=block";
