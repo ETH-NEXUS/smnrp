@@ -31,19 +31,25 @@ server {
   ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem;
 
   ssl_prefer_server_ciphers on;
-  ssl_protocols TLSv1.2;
-  ssl_ciphers "EECDH+ECDSA+AESGCM EECDH+aRSA+AESGCM EECDH+ECDSA+SHA384 EECDH+ECDSA+SHA256 EECDH+aRSA+SHA384 EECDH+aRSA+SHA256 EECDH+aRSA+RC4 EECDH EDH+aRSA HIGH !RC4 !aNULL !eNULL !LOW !3DES !MD5 !EXP !PSK !SRP !DSS";
+  ssl_protocols TLSv1.2 TLSv1.3;
+  # proposal from https://raymii.org/s/tutorials/Strong_SSL_Security_On_nginx.html
+  ssl_ciphers ECDHE-RSA-AES256-GCM-SHA512:DHE-RSA-AES256-GCM-SHA512:ECDHE-RSA-AES256-GCM-SHA384:DHE-RSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-SHA384;
+  # for backward compatibility we could use:
+  # ssl_ciphers "EECDH+AESGCM:EDH+AESGCM:ECDHE-RSA-AES128-GCM-SHA256:AES256+EECDH:DHE-RSA-AES128-GCM-SHA256:AES256+EDH:ECDHE-RSA-AES256-GCM-SHA384:DHE-RSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-SHA384:ECDHE-RSA-AES128-SHA256:ECDHE-RSA-AES256-SHA:ECDHE-RSA-AES128-SHA:DHE-RSA-AES256-SHA256:DHE-RSA-AES128-SHA256:DHE-RSA-AES256-SHA:DHE-RSA-AES128-SHA:ECDHE-RSA-DES-CBC3-SHA:EDH-RSA-DES-CBC3-SHA:AES256-GCM-SHA384:AES128-GCM-SHA256:AES256-SHA256:AES128-SHA256:AES256-SHA:AES128-SHA:DES-CBC3-SHA:HIGH:!aNULL:!eNULL:!EXPORT:!DES:!MD5:!PSK:!RC4";
   ssl_session_cache shared:le_nginx_SSL:10m;
   ssl_session_timeout 1440m;
   ssl_session_tickets off;
 
+  include /etc/nginx/conf.d/ocspstapling.nginx;
+
   # enables HSTS for 1 year (31536000 seconds)
-  add_header Strict-Transport-Security "max-age=31536000" always;
+  add_header Strict-Transport-Security "max-age=31536000; includeSubdomains; preload;
 
   add_header X-Frame-Options "SAMEORIGIN";
   add_header X-XSS-Protection "1; mode=block";
   add_header X-Content-Type-Options nosniff;
   add_header Cache-Control no-cache="Set-Cookie";
+  add_header Content-Security-Policy "default-src 'self' http: https: data: blob: 'unsafe-inline'" always;
 
   root /web_root;
   index index.html;
@@ -52,6 +58,19 @@ server {
   include /etc/nginx/conf.d/locations.nginx;
 }
 EOF
+
+ocspstapling_config='/etc/nginx/conf.d/ocspstapling.nginx'
+if [ "${SMNRP_SELF_SIGNED}" != 'true' ]; then
+  echo "### Enable OCSP Stapling"
+  cat >> ${ocspstapling_config} << EOF
+ssl_stapling on;
+ssl_stapling_verify on;
+resolver 8.8.8.8 8.8.4.4 valid=300s;
+resolver_timeout 5s;
+EOF
+else
+  touch ${ocspstapling_config}
+fi
 
 upstream_config='/etc/nginx/conf.d/upstreams.nginx'
 if [ ! -z ${SMNRP_UPSTREAMS} ]; then
