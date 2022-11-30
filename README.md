@@ -34,7 +34,26 @@ SMNRP_OWN_CERT=false
 
 ### `SMNRP_LOCATIONS`
 
-(optional) Define additional locations you want to support. This is essential if you use `SMNRP` as a simple proxy for your web application. The definitions are comma separated and consists of two parts `path!alias|proxy_url`. An `alias` need to be configured as a path (e.g. `/usr/share/static`). A `proxy_url` need to be configured as a url (e.g. `https://targets/api/`). The two parts are separated by a `!`. 
+(optional) Define additional locations you want to support. This is essential if you use `SMNRP` as a simple proxy for your web application. The definitions are comma separated and consists of two mandatory and an optional part:
+
+```bash
+path!alias|proxy_url[!flags]
+``` 
+
+An `alias` need to be configured as a path (e.g. `/usr/share/static`).
+
+A `proxy_url` need to be configured as a url (e.g. `https://targets/api/`).
+
+The flags is a `:` separated string with flags.
+
+The three parts are separated by a `!`.
+
+#### Flags
+
+- **t**:  Adds a `try_files` clause to an alias location.
+
+#### Translation to Nginx config
+
 Basically the translation inside the Nginx config is
 
 - for an `alias`:
@@ -42,6 +61,7 @@ Basically the translation inside the Nginx config is
 ```nginx
 location <path> {
   alias <alias>
+  try_files $uri $uri/ /index.html;      <--[Only if flag 't' is set]
 }
 ```
 
