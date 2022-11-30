@@ -117,7 +117,7 @@ EOF
     else
       echo "  alias ${target};" >> ${location_config}
       if [[ " ${flags[*]} " =~ " t " ]]; then
-        echo "  try_files $uri $uri/ /index.html;" >> ${location_config}
+        echo "  try_files \$uri \$uri/ /index.html;" >> ${location_config}
       fi
     fi
     echo "}" >> ${location_config}

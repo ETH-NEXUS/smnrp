@@ -38,7 +38,7 @@ SMNRP_OWN_CERT=false
 
 ```bash
 path!alias|proxy_url[!flags]
-``` 
+```
 
 An `alias` need to be configured as a path (e.g. `/usr/share/static`).
 
