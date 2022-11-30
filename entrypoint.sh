@@ -97,8 +97,10 @@ EOF
 if [ ! -z ${SMNRP_LOCATIONS} ]; then
   for location in ${locations[@]}
   do
-    uri=${location%%!*}
-    target=${location#*!}
+    parts=($(echo "$location" | tr '!' '\n'))
+    uri=${parts[0]}
+    target=${parts[1]}
+    flags=($(echo "${parts[2]}" | tr ':' '\n'))
     echo "location ${uri} {" >> ${location_config}
     echo "### Target: ${uri} --> ${target}"
     if [[ $target == http* ]]; then
@@ -114,6 +116,9 @@ if [ ! -z ${SMNRP_LOCATIONS} ]; then
 EOF
     else
       echo "  alias ${target};" >> ${location_config}
+      if [[ " ${flags[*]} " =~ " t " ]]; then
+        echo "  try_files $uri $uri/ /index.html;" >> ${location_config}
+      fi
     fi
     echo "}" >> ${location_config}
   done
