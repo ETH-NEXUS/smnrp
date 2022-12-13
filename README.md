@@ -109,6 +109,21 @@ Here is an example:
 ```
 
 > Replace the `${domain}` with the first domain name in `SMNRP_DOMAINS`.
+
+### `SMNRP_CSP`
+
+You can define the `Content-Security-Policy` header. If this is not defined the default (most secure) header is used:
+
+```bash
+default-src 'self' http: https: data: blob: 'unsafe-inline'
+```
+
+If you want to completely disable the `Content-Security-Policy` header set `SMNRP_CSP` to `none`:
+
+```bash
+SMNRP_CSP=none
+```
+
 ## Integration into `docker-compose`
 
 To integrate `SMNRP` into docker compose to setup a reverse proxy to the application you just need to add the following part into you `docker-compose.yml`:

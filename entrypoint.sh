@@ -49,8 +49,7 @@ server {
   add_header X-XSS-Protection "1; mode=block";
   add_header X-Content-Type-Options nosniff;
   add_header Cache-Control no-cache="Set-Cookie";
-  # We remove this and make the CSP configurable
-  # add_header Content-Security-Policy "default-src 'self' http: https: data: blob: 'unsafe-inline'" always;
+  include /etc/nginx/conf.d/csp.nginx;
 
   root /web_root;
   index index.html;
@@ -71,6 +70,23 @@ resolver_timeout 5s;
 EOF
 else
   touch ${ocspstapling_config}
+fi
+
+csp_config='/etc/nginx/conf.d/csp.nginx'
+if [ ! -z "${SMNRP_CSP}" ]; then
+  if [ "${SMNRP_CSP}" != "none" ]; then
+    echo "### Add CSP header: ${SMNRP_CSP}"
+    cat > ${csp_config} << EOF
+add_header Content-Security-Policy "${SMNRP_CSP}" always;
+EOF
+  else
+    echo "### None CSP header configured"
+  fi
+else
+  echo "### Adding default (most secure) CSP header"
+  cat > ${csp_config} << EOF
+add_header Content-Security-Policy "default-src 'self' http: https: data: blob: 'unsafe-inline'" always;
+EOF
 fi
 
 upstream_config='/etc/nginx/conf.d/upstreams.nginx'
