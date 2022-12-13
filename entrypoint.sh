@@ -49,7 +49,8 @@ server {
   add_header X-XSS-Protection "1; mode=block";
   add_header X-Content-Type-Options nosniff;
   add_header Cache-Control no-cache="Set-Cookie";
-  add_header Content-Security-Policy "default-src 'self' http: https: data: blob: 'unsafe-inline'" always;
+  # We remove this and make the CSP configurable
+  # add_header Content-Security-Policy "default-src 'self' http: https: data: blob: 'unsafe-inline'" always;
 
   root /web_root;
   index index.html;
@@ -62,7 +63,7 @@ EOF
 ocspstapling_config='/etc/nginx/conf.d/ocspstapling.nginx'
 if [ "${SMNRP_SELF_SIGNED}" != 'true' ]; then
   echo "### Enable OCSP Stapling"
-  cat >> ${ocspstapling_config} << EOF
+  cat > ${ocspstapling_config} << EOF
 ssl_stapling on;
 ssl_stapling_verify on;
 resolver 8.8.8.8 8.8.4.4 valid=300s;
