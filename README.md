@@ -124,6 +124,10 @@ If you want to completely disable the `Content-Security-Policy` header set `SMNR
 SMNRP_CSP=none
 ```
 
+## Apply custom configurations
+
+`SMNRP` also loads `*.conf` files in the directory `/etc/nginx/custom.conf.d`. You can bind mount a local directory including your custom configs to `/etc/nginx/custom.conf.d`.
+
 ## Integration into `docker-compose`
 
 To integrate `SMNRP` into docker compose to setup a reverse proxy to the application you just need to add the following part into you `docker-compose.yml`:
@@ -139,6 +143,7 @@ services:
     volumes: 
       - "web_root:/web_root:ro"
       - "smnrp_live:/etc/letsencrypt/live"
+      - "./custom.conf.d:/etc/nginx/custom.conf.d"
     ports:
       - "80:80"
       - "443:443"
