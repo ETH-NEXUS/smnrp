@@ -126,7 +126,7 @@ SMNRP_CSP=none
 
 ## Apply custom configurations
 
-`SMNRP` also loads `*.conf` files in the directory `/etc/nginx/custom.conf.d`. You can bind mount a local directory including your custom configs to `/etc/nginx/custom.conf.d`.
+`SMNRP` also loads `*.nginx` files in the directory `/etc/nginx/conf.d/custom/*.nginx`. You can bind mount or copy a local directory including your custom configs to `/etc/nginx/conf.d/custom`.
 
 ## Integration into `docker-compose`
 
@@ -143,7 +143,7 @@ services:
     volumes: 
       - "web_root:/web_root:ro"
       - "smnrp_live:/etc/letsencrypt/live"
-      - "./custom.conf.d:/etc/nginx/custom.conf.d"
+      - "./custom/configs:/etc/nginx/conf.d/custom"
     ports:
       - "80:80"
       - "443:443"

@@ -56,6 +56,7 @@ server {
 
   include /etc/nginx/conf.d/errorpages.nginx;
   include /etc/nginx/conf.d/locations.nginx;
+  include /etc/nginx/conf.d/custom/*.nginx;
 }
 EOF
 
