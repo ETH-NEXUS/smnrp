@@ -24,10 +24,10 @@ jobs:
             ethnexus/smnrp            
           # generate Docker tags based on the following events/attributes
           tags: |
-            type=schedule
+            # type=schedule
             type=ref,event=branch
             type=ref,event=pr
-            type=sha
+            # type=sha
             type=semver,pattern={{version}}
             type=semver,pattern={{major}}.{{minor}}
             type=semver,pattern={{major}}
