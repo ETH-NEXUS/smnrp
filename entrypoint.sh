@@ -16,6 +16,7 @@ default_config='/etc/nginx/conf.d/default.conf'
 rm -f ${default_config}
 readarray -d , -t domains < <(printf '%s' "${SMNRP_DOMAINS}")
 domain=${domains[0]}
+client_max_body_size="${SMNRP_CLIENT_MAX_BODY_SIZE:-1m}"
 echo "### Domain: ${domain}"
 cat >> ${default_config} << EOF
 server {
@@ -54,9 +55,11 @@ server {
   root /web_root;
   index index.html;
 
+  client_max_body_size=${client_max_body_size};
+
+  include /etc/nginx/conf.d/custom/*.nginx;
   include /etc/nginx/conf.d/errorpages.nginx;
   include /etc/nginx/conf.d/locations.nginx;
-  include /etc/nginx/conf.d/custom/*.nginx;
 }
 EOF
 

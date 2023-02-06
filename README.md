@@ -124,6 +124,14 @@ If you want to completely disable the `Content-Security-Policy` header set `SMNR
 SMNRP_CSP=none
 ```
 
+### `SMNRP_CLIENT_MAX_BODY_SIZE`
+
+You can set the nginx servers global `client_max_body_size`. Default is `1m`.
+
+```bash
+SMNRP_CLIENT_MAX_BODY_SIZE=1m
+```
+
 ## Apply custom configurations
 
 `SMNRP` also loads `*.nginx` files in the directory `/etc/nginx/conf.d/custom/*.nginx`. You can bind mount or copy a local directory including your custom configs to `/etc/nginx/conf.d/custom`.
