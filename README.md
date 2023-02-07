@@ -90,7 +90,7 @@ If set to `true` smnrp will regenerate the self signed certificate on each start
 
 ### `SMNRP_OWN_CERT`
 
-If set to `true` smnrp will not create any certificate but it requires the following two files to be mapped into 
+If set to `true` smnrp will not create any certificate but it requires the following two files to be mapped into
 the container (i.e. as docker read-only volume):
 
 - `/etc/letsencrypt/live/${domain}/fullchain.pem`
