@@ -55,7 +55,7 @@ server {
   root /web_root;
   index index.html;
 
-  client_max_body_size=${client_max_body_size};
+  client_max_body_size ${client_max_body_size};
 
   include /etc/nginx/conf.d/custom/*.nginx;
   include /etc/nginx/conf.d/errorpages.nginx;
