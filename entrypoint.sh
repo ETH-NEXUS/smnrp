@@ -52,6 +52,14 @@ server {
   add_header Cache-Control no-cache="Set-Cookie";
   include /etc/nginx/conf.d/csp.nginx;
 
+  proxy_set_header Host \$http_host;
+  proxy_set_header X-Real-IP \$remote_addr;
+  proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+  proxy_set_header X-Scheme \$scheme;
+  proxy_set_header X-Forwarded-Proto \$scheme;
+  proxy_read_timeout 180s;
+  proxy_redirect off;
+
   root /web_root;
   index index.html;
 
@@ -126,13 +134,6 @@ if [ ! -z ${SMNRP_LOCATIONS} ]; then
     echo "### Target: ${uri} --> ${target}"
     if [[ $target == http* ]]; then
       cat >> ${location_config} << EOF
-  proxy_set_header Host \$http_host;
-  proxy_set_header X-Real-IP \$remote_addr;
-  proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
-  proxy_set_header X-Scheme \$scheme;
-  proxy_set_header X-Forwarded-Proto \$scheme;
-  proxy_read_timeout 180s;
-  proxy_redirect off;
   proxy_pass ${target};
 EOF
     else
