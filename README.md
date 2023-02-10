@@ -10,6 +10,20 @@ The _S_ ecure _M_ ultifuctional _N_ ginx _R_ everse _P_ roxy (SMNRP) is a revers
 
 To integrate the SMNRP into your web application you just need to configure the following environment variables (in the `.env` file):
 
+To start with the most basic configuration to just reverse proxy a web application you can configure the following:
+
+```bash
+SMNRP_DOMAINS=domain.com,www.domain.com
+SMNRP_UPSTREAMS=api:5000
+SMNRP_UPSTREAM_PROTOCOL=http
+SMNRP_LOCATIONS=/api/!http://targets/api/,/api/static!/usr/share/static
+SMNRP_SELF_SIGNED=false
+SMNRP_SELF_SIGNED_RENEW=false
+SMNRP_OWN_CERT=false
+```
+
+The following example shows the load balancing mode:
+
 ```bash
 SMNRP_DOMAINS=domain.com,www.domain.com
 SMNRP_UPSTREAMS=app.server1.com:443,app.server2.com:443
@@ -169,4 +183,6 @@ services:
     ...
 ```
 
-Your web application files need to be generated into the docker volume `web_root` that needs to be mapped to `/web_root`.
+Your web application files need to be generated into the docker volume `web_root` that needs to be mapped to `/web_root`. 
+
+> Essential is the `smnrp_live` volume. You should always bind mount this one to `/etc/letsencrypt/live` otherwise smnrp may create too many requests to let's encrypt.
