@@ -183,7 +183,7 @@ else
     echo "### Generating self signed certificate for ${SMNRP_DOMAINS} ..."
     # mkdir -p /etc/letsencrypt/rootCA
     mkdir -p /etc/letsencrypt/live/${domain}
-    if [[ "${SMNRP_SELF_SIGNED_RENEW}" == 'true' ]] || [[ ! -f /etc/letsencrypt/live/${domain}/csr.conf ]]; then
+    if [[ "${SMNRP_SELF_SIGNED_RENEW}" == 'true' ]] || [[ ! -e /etc/letsencrypt/live/${domain}/csr.conf ]]; then
       cat > /etc/letsencrypt/live/${domain}/csr.conf << EOF
 [ req ]
 default_bits = 2048
@@ -221,7 +221,7 @@ EOF
         fi
       done
     fi
-    if [[ "${SMNRP_SELF_SIGNED_RENEW}" == 'true' ]] || [[ ! -f /etc/letsencrypt/live/${domain}/fullchain.pem ]]; then
+    if [[ "${SMNRP_SELF_SIGNED_RENEW}" == 'true' ]] || [[ ! -e /etc/letsencrypt/live/${domain}/fullchain.pem ]]; then
       openssl req \
         -x509 \
         -nodes \
@@ -232,7 +232,7 @@ EOF
         -config /etc/letsencrypt/live/${domain}/csr.conf
     fi
   else
-    if [[ "${SMNRP_REQUEST_ON_BOOT}" == 'true' ]] || [[ ! -f /etc/letsencrypt/live/${domain}/fullchain.pem ]]; then
+    if [[ "${SMNRP_REQUEST_ON_BOOT}" == 'true' ]] || [[ ! -e /etc/letsencrypt/live/${domain}/fullchain.pem ]]; then
       echo "### Requesting Let's Encrypt certificate for ${SMNRP_DOMAINS} ..."
       rsa_key_size=4096
       certbot certonly --webroot -w /var/www/certbot \
