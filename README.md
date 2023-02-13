@@ -158,13 +158,13 @@ To integrate `SMNRP` into docker compose to setup a reverse proxy to the applica
 version: "3"
 volumes:
   web_root:
-  smnrp_live:
+  smnrp-data:
 services:
   ws:
     image: ethnexus/smnrp
     volumes: 
       - "web_root:/web_root:ro"
-      - "smnrp_live:/etc/letsencrypt/live"
+      - "smnrp-data:/etc/letsencrypt"
       - "./custom/configs:/etc/nginx/conf.d/custom"
     ports:
       - "80:80"
@@ -185,4 +185,4 @@ services:
 
 Your web application files need to be generated into the docker volume `web_root` that needs to be mapped to `/web_root`. 
 
-> Essential is the `smnrp_live` volume. You should always bind mount this one to `/etc/letsencrypt/live` otherwise smnrp may create too many requests to let's encrypt.
+> Essential is the `smnrp-data` volume. You should always bind mount this one to `/etc/letsencrypt` otherwise smnrp may create too many requests to let's encrypt.
