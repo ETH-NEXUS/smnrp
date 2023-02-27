@@ -7,7 +7,7 @@ while true
 do
   inotifywait -r --exclude .swp -e create -e modify -e delete -e move /etc/letsencrypt/live
   if [ $? -ne 0 ]; then
-    echo "### inotifywait exited with status != 1 ($?)."
+    echo "### inotifywait exited with status != 0 ($?)."
     echo "### reloader will exit"
     exit 1
   else
