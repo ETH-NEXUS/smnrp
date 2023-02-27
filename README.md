@@ -3,8 +3,14 @@
 The _S_ ecure _M_ ultifuctional _N_ ginx _R_ everse _P_ roxy (SMNRP) is a reverse proxy based on Nginx that supports the following features:
 
 - Automatic generation and renewal of https certificates ([using Let's Encrypt](https://letsencrypt.org/))
-- Loadbalancer to different locations
+- Automatic generation of a self signed certificate
+- Usage of custom certificates
+- Load balancer to different locations
 - Reverse proxy to a web application
+- High baseline security
+- Maintenance mode
+- Customized `Content-Security-Policy`
+- OCSP stapling [(?)](https://www.ssls.com/knowledgebase/what-is-ocsp-stapling/)
 
 ## Getting started
 
