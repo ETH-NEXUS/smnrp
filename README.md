@@ -191,6 +191,25 @@ Your web application files need to be generated into the docker volume `web_root
 
 To enable the maintenance mode you need to touch the file `.maintenance` into the folder `/web_root`. As long as the file exists `smnrp` will return `503 Service unavailable` and displays a nice maintenance page.
 
+### Script to enable, disable the maintenance mode
+
+Here is a script that you could use to enable, disable the maintenance mode with one command:
+
+```bash
+#!/usr/bin/env bash
+
+DC_EXEC="docker-compose -f docker-compose.yml -f docker-compose.prod.yml exec ws"
+
+if [[ "$1" == "on" ]]; then
+    ${DC_EXEC} sh -c 'touch /web_root/.maintenance'
+elif [[ "$1" == "off" ]]; then
+    ${DC_EXEC} sh -c 'rm -f /web_root/.maintenance'
+else
+    echo "Please specify 'on' or 'off'"
+    exit 1
+fi
+```
+
 ### Change the maintenance page
 
 To add a custom maintenance page you need to overwrite the file `/usr/share/nginx/html/error/maintenance.html`.
