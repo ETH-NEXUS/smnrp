@@ -186,3 +186,7 @@ services:
 Your web application files need to be generated into the docker volume `web_root` that needs to be mapped to `/web_root`. 
 
 > Essential is the `smnrp-data` volume. You should always bind mount this one to `/etc/letsencrypt` otherwise smnrp may create too many requests to let's encrypt.
+
+## Maintenance mode
+
+To enable the maintenance mode you need to touch the file `.maintenance` into the folder `/web_root`. As long as the file exists `smnrp` will return `503 Service unavailable` and displays a nice maintenance page.
