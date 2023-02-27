@@ -190,3 +190,13 @@ Your web application files need to be generated into the docker volume `web_root
 ## Maintenance mode
 
 To enable the maintenance mode you need to touch the file `.maintenance` into the folder `/web_root`. As long as the file exists `smnrp` will return `503 Service unavailable` and displays a nice maintenance page.
+
+### Change the maintenance page
+
+To add a custom maintenance page you need to overwrite the file `/usr/share/nginx/html/error/maintenance.html`.
+
+```yaml
+...
+  volumes:
+    - ./my-maintenance.html:/usr/share/nginx/html/error/maintenance.html
+```
