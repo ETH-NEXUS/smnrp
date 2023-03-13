@@ -131,15 +131,15 @@ if [ ! -z ${SMNRP_UPSTREAMS} ]; then
     fi
     echo "### Upstream: ${target} -> ${upstream_to}"
     targets[$target]="${targets[$target]} ${upstream_to}"
-    for target in "${!targets[@]}"
+  done
+  for target in "${!targets[@]}"
+  do
+    echo "upstream ${target} {" >> ${upstream_config}
+    for _upstream in ${targets[$target]}
     do
-      echo "upstream ${target} {" >> ${upstream_config}
-      for _upstream in ${targets[$target]}
-      do
-        echo "  server ${_upstream} max_fails=3 fail_timeout=10s;" >> ${upstream_config}
-      done
-      echo "}" >> ${upstream_config}
+      echo "  server ${_upstream} max_fails=3 fail_timeout=10s;" >> ${upstream_config}
     done
+    echo "}" >> ${upstream_config}
   done
 else
   touch ${upstream_config}
