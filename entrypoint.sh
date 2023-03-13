@@ -19,6 +19,13 @@ domain=${domains[0]}
 client_max_body_size="${SMNRP_CLIENT_MAX_BODY_SIZE:-1m}"
 echo "### Domain: ${domain}"
 cat >> ${default_config} << EOF
+# Top-level HTTP config for WebSocket headers
+# If Upgrade is defined, Connection = upgrade
+# If Upgrade is empty, Connection = close
+map \$http_upgrade \$connection_upgrade {
+    default upgrade;
+    ''      close;
+}
 server {
   listen 443 ssl http2 default_server;
   # listen [::]:443 ssl http2 default_server;
@@ -53,12 +60,18 @@ server {
   include /etc/nginx/conf.d/csp.nginx;
 
   proxy_set_header Host \$http_host;
+  # proxy_set_header Host \$host\$server_port;
   proxy_set_header X-Real-IP \$remote_addr;
   proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
-  proxy_set_header X-Scheme \$scheme;
   proxy_set_header X-Forwarded-Proto \$scheme;
+  proxy_set_header X-Scheme \$scheme;
+  # websocket headers
+  proxy_set_header Upgrade \$http_upgrade;
+  proxy_set_header Connection \$connection_upgrade;
+
   proxy_read_timeout 180s;
   proxy_redirect off;
+  proxy_buffering off;
 
   root /web_root;
   index index.html;
@@ -102,15 +115,32 @@ EOF
 fi
 
 upstream_config='/etc/nginx/conf.d/upstreams.nginx'
+rm -f ${upstream_config}
 if [ ! -z ${SMNRP_UPSTREAMS} ]; then
   readarray -d , -t upstreams < <(printf '%s'  "${SMNRP_UPSTREAMS}")
-  echo "upstream targets {" > ${upstream_config}
+  declare -A targets
   for upstream in ${upstreams[@]}
   do
-    echo "### Upstream: ${upstream}"
-    echo "  server ${upstream} max_fails=3 fail_timeout=10s;" >> ${upstream_config}
+    if grep -q "!" <<< "${upstream}"; then
+      parts=($(echo "$upstream" | tr '!' '\n'))
+      target=${parts[0]}
+      upstream_to=${parts[1]}
+    else
+      target="targets"
+      upstream_to="${upstream}"
+    fi
+    echo "### Upstream: ${target} -> ${upstream_to}"
+    targets[$target]="${targets[$target]} ${upstream_to}"
+    for target in "${!targets[@]}"
+    do
+      echo "upstream ${target} {" >> ${upstream_config}
+      for _upstream in ${targets[$target]}
+      do
+        echo "  server ${_upstream} max_fails=3 fail_timeout=10s;" >> ${upstream_config}
+      done
+      echo "}" >> ${upstream_config}
+    done
   done
-  echo "}" >> ${upstream_config}
 else
   touch ${upstream_config}
 fi

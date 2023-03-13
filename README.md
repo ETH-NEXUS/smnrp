@@ -46,7 +46,12 @@ SMNRP_OWN_CERT=false
 
 ### `SMNRP_UPSTREAMS`
 
-(optional) Define the upstream servers in a comma separated list. The upstreams can be referenced in the `SMNRP_LOCATIONS` as `targets`. If this setting is not given the `/web_root` is served.
+(optional) Define the upstream servers in a comma separated list. Unnamed upstreams can be referenced in the `SMNRP_LOCATIONS` as `targets`. You can also name targets by prefixing them with `target_name!`. If you use named targets you can reference them in `SMNRP_LOCATIONS` by its `target_name`. If this setting is not given the `/web_root` is served.
+
+```bash
+SMNRP_UPSTREAMS=api:5000,notebook!notebook:8888
+```
+
 
 ### `SMNRP_UPSTREAM_PROTOCOL`
 
