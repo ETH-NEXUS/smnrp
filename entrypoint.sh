@@ -59,13 +59,13 @@ server {
   add_header Cache-Control no-cache="Set-Cookie";
   include /etc/nginx/conf.d/csp.nginx;
 
-  proxy_set_header Host \$http_host;
-  # proxy_set_header Host \$host\$server_port;
+  proxy_set_header Host \$host;
   proxy_set_header X-Real-IP \$remote_addr;
   proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
   proxy_set_header X-Forwarded-Proto \$scheme;
   proxy_set_header X-Scheme \$scheme;
   # websocket headers
+  proxy_http_version 1.1;
   proxy_set_header Upgrade \$http_upgrade;
   proxy_set_header Connection \$connection_upgrade;
 
@@ -138,6 +138,7 @@ if [ ! -z ${SMNRP_UPSTREAMS} ]; then
     for _upstream in ${targets[$target]}
     do
       echo "  server ${_upstream} max_fails=3 fail_timeout=10s;" >> ${upstream_config}
+      echo "  keepalive 32;" >> ${upstream_config}
     done
     echo "}" >> ${upstream_config}
   done
