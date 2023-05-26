@@ -153,6 +153,9 @@ cat >> ${location_config} << EOF
 location /.well-known/acme-challenge/ {
     root /var/www/certbot;
 }
+location /ws/ {
+  proxy_pass http://localhost:7890;
+}
 EOF
 if [ ! -z ${SMNRP_LOCATIONS} ]; then
   for location in ${locations[@]}
@@ -285,6 +288,11 @@ mv /tmp/nginx/*.conf /etc/nginx/conf.d/.
 nginx -s reload
 echo "### Waiting for nginx to start ..."
 wait -n
+
+if [[ "${SMNRP_DISABLE_ANALYTICS}" != 'true' ]]; then
+  echo "### Starting analyser in background"
+  sh -c "/analyser.sh" &
+fi
 
 echo "### Staring nginx reloader in background"
 sh -c "/reloader.sh" &

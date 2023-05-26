@@ -157,6 +157,10 @@ You can set the nginx servers global `client_max_body_size`. Default is `1m`.
 SMNRP_CLIENT_MAX_BODY_SIZE=1m
 ```
 
+### `SMNRP_DISABLE_ANALYTICS`
+
+By default smnrp is generating an analytics dashboard page based on [goaccess](https://goaccess.io/) in at `analytics/dashboard.html`. To disable this feature set `SMNRP_DISABLE_ANALYTICS` to `true`.
+
 ## Apply custom configurations
 
 `SMNRP` also loads `*.nginx` files in the directory `/etc/nginx/conf.d/custom/*.nginx`. You can bind mount or copy a local directory including your custom configs to `/etc/nginx/conf.d/custom`.

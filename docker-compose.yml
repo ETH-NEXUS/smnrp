@@ -1,6 +1,7 @@
 version: "3"
 volumes:
   smnrp_live:
+  analytics_data:
 services:
   smnrp:
     build: .
@@ -9,4 +10,5 @@ services:
       - "443:443"
     volumes:
       - smnrp_live:/etc/letsencrypt/live
+      - analytics_data:/var/log/analytics
     env_file: .env
