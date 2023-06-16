@@ -1,4 +1,4 @@
-FROM nginx:mainline
+FROM nginx:1.24-bullseye
 
 # Define a volume for /etc/letsencrypt/live
 # to make sure the requested certificates
