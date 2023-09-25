@@ -147,6 +147,7 @@ else
 fi
 
 location_config='/etc/nginx/conf.d/locations.nginx'
+default_root_location=1
 rm -f ${location_config}
 readarray -d , -t locations < <(printf '%s' "${SMNRP_LOCATIONS}")
 cat >> ${location_config} << EOF
@@ -166,6 +167,10 @@ if [ ! -z ${SMNRP_LOCATIONS} ]; then
     flags=($(echo "${parts[2]}" | tr ':' '\n'))
     echo "location ${uri} {" >> ${location_config}
     echo "### Target: ${uri} --> ${target}"
+    if [[ "$uri" == "/" ]]; then
+      echo "### Skipping default / target because it's configured as a location to ${target}."
+      default_root_location=0
+    fi
     if [[ $target == http* ]]; then
       cat >> ${location_config} << EOF
   proxy_pass ${target};
@@ -178,11 +183,13 @@ EOF
     fi
     echo "}" >> ${location_config}
   done
-  cat >> ${location_config} << EOF
+  if [[ $default_root_location -eq 1 ]]; then
+    cat >> ${location_config} << EOF
 location / {
   try_files \$uri \$uri/ /index.html;
 }
 EOF
+  fi
 else
   if [ ! -z ${SMNRP_UPSTREAMS} ]; then
     cat >> ${location_config} << EOF
