@@ -12,7 +12,8 @@ RUN apt-get update && apt-get install -y \
   python3-certbot-nginx \
   inotify-tools \
   wget \
-  gpg
+  gpg \
+  apache2-utils
 
 # Install goaccess
 RUN wget -O - https://deb.goaccess.io/gnugpg.key | gpg --dearmor | tee /usr/share/keyrings/goaccess.gpg >/dev/null && \

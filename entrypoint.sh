@@ -185,6 +185,10 @@ EOF
         echo "  try_files \$uri \$uri/ /index.html;" >> ${location_config}
       fi
     fi
+    if [[ " ${flags[*]} " =~ " a " ]]; then
+      echo '  auth_basic "Authorization Required";' >> ${location_config}
+      echo '  auth_basic_user_file /etc/nginx/htpasswd;' >> ${location_config}
+    fi
     echo "}" >> ${location_config}
   done
   if [[ $default_root_location -eq 1 ]]; then
@@ -203,6 +207,21 @@ location / {
 }
 EOF
   fi
+fi
+
+if [ ! -z ${SMNRP_USERS} ]; then
+  auth_config='/etc/nginx/htaccess'
+  rm -f ${auth_config}
+  readarray -d , -t users < <(printf '%s' "${SMNRP_USERS}")
+  for user in ${users[@]}
+  do
+    parts=($(echo "$user" | tr ':' '\n'))
+    _user=${parts[0]}
+    _pass=${parts[1]}
+    echo "### User: ${user}"
+    htpasswd -bc /etc/nginx/htpasswd "${_user}" "${_pass}"
+  done
+
 fi
 
 # We empty the config and leave only certbot.conf
