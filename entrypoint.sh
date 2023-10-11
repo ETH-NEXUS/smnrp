@@ -157,6 +157,10 @@ location /.well-known/acme-challenge/ {
 location /ws/ {
   proxy_pass http://localhost:7890;
 }
+location /analytics/ {
+  root /web_root;
+  index dashboard.html;
+}
 EOF
 if [ ! -z ${SMNRP_LOCATIONS} ]; then
   for location in ${locations[@]}
