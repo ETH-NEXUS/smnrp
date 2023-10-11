@@ -78,6 +78,15 @@ The three parts are separated by a `!`.
 - **t**:  Adds a `try_files` clause to an alias location.
 - **a**:  Adds a `auth_basic` clause to the location so that only `SMNRP_USERS` have access to it.
 
+#### Example
+
+The following example routes the `/` location to `/`, adds a `try_files` clause as well as a `auth_basic` clause to
+the location section. The `/api/` location is `proxy_pass`ed to _https://postman-echo.com/get/_
+
+```bash
+/!/!t:a,/api/!https://postman-echo.com/get/
+```
+
 #### Translation to Nginx config
 
 Basically the translation inside the Nginx config is
@@ -244,9 +253,11 @@ To add a custom maintenance page you need to overwrite the file `/usr/share/ngin
     - ./my-maintenance.html:/usr/share/nginx/html/error/maintenance.html
 ```
 
+## Restrict access
+
 ### Enable basic authentication
 
-To enable basic authentication on selected targets you need to flag the targets with the `a` flag and define the 
+To enable basic authentication on selected targets you need to flag the locations with the `a` flag and define the
 users and passwords using the `SMNRP_USERS` environment variable.
 
 To add a custom _Authorization Required_ page you need to overwrite the file `/usr/share/nginx/html/error/auth_required.html`.
@@ -254,5 +265,5 @@ To add a custom _Authorization Required_ page you need to overwrite the file `/u
 ```yaml
 ...
   volumes:
-    - ./my-maintenance.html:/usr/share/nginx/html/error/auth_required.html
+    - ./my-auth_required.html:/usr/share/nginx/html/error/auth_required.html
 ```
