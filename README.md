@@ -9,6 +9,7 @@ The _S_ ecure _M_ ultifuctional _N_ ginx _R_ everse _P_ roxy (SMNRP) is a revers
 - Reverse proxy to a web application
 - High baseline security
 - Maintenance mode
+- Basic authentication to specific locations
 - Customized `Content-Security-Policy`
 - OCSP stapling [(?)](https://www.ssls.com/knowledgebase/what-is-ocsp-stapling/)
 
@@ -62,7 +63,7 @@ SMNRP_UPSTREAMS=api:5000,notebook!notebook:8888
 (optional) Define additional locations you want to support. This is essential if you use `SMNRP` as a simple proxy for your web application. The definitions are comma separated and consists of two mandatory and an optional part:
 
 ```bash
-path!alias|proxy_url[!flags]
+SMNRP_LOCATIONS=path!alias|proxy_url[!flags]
 ```
 
 An `alias` need to be configured as a path (e.g. `/usr/share/static`).
@@ -84,7 +85,7 @@ The following example routes the `/` location to `/`, adds a `try_files` clause 
 the location section. The `/api/` location is `proxy_pass`ed to _https://postman-echo.com/get/_
 
 ```bash
-/!/!t:a,/api/!https://postman-echo.com/get/
+SMNRP_LOCATIONS=/!/!t:a,/api/!https://postman-echo.com/get/
 ```
 
 #### Translation to Nginx config
@@ -95,7 +96,7 @@ Basically the translation inside the Nginx config is
 
 ```nginx
 location <path> {
-  alias <alias>
+  alias <alias>;
   try_files $uri $uri/ /index.html;      <--[Only if flag 't' is set]
 }
 ```
@@ -104,11 +105,20 @@ location <path> {
 
 ```nginx
 location <path> {
-  proxy_pass <proxy_url>
+  proxy_pass <proxy_url>;
 }
 ```
 
-If you want to redirect to the configured upstream(s) you can use `targets` as the server name. If you want to redirect to another docker contatiner you need to use the _service name_ of the particular application.
+- for `auth_basic`:
+
+```nginx
+location <path> {
+  auth_basic "Authorization Required";
+  auth_basic_user_file <path_to_user_pw_list>;
+}
+```
+
+If you want to redirect to the configured unnamed upstream(s) you can use `targets` as the server name. If you want to redirect to another docker contatiner you need to use the _service name_ of the particular application.
 If you only want to proxy to other servers, just leave `SMNRP_LOCATIONS` empty.
 
 ### `SMNRP_REQUEST_ON_BOOT`
@@ -139,8 +149,8 @@ Here is an example:
     image: ethnexus/smnrp
     volumes:
       ...
-      - /etc/pki/tls/certs2022/careapp.ethz.ch.pem:/etc/letsencrypt/live/careapp.ethz.ch/fullchain.pem:ro
-      - /etc/pki/tls/certs2022/careapp.ethz.ch.key:/etc/letsencrypt/live/careapp.ethz.ch/privkey.pem:ro
+      - /etc/pki/tls/certs2022/domain.com.pem:/etc/letsencrypt/live/domain.com/fullchain.pem:ro
+      - /etc/pki/tls/certs2022/domain.com.key:/etc/letsencrypt/live/domain.com/privkey.pem:ro
 ```
 
 > Replace the `${domain}` with the first domain name in `SMNRP_DOMAINS`.
@@ -191,7 +201,7 @@ To integrate `SMNRP` into docker compose to setup a reverse proxy to the applica
 version: "3"
 volumes:
   web_root:
-  smnrp-data:
+  smnrp_data:
 services:
   ws:
     image: ethnexus/smnrp
@@ -218,7 +228,7 @@ services:
 
 Your web application files need to be generated into the docker volume `web_root` that needs to be mapped to `/web_root`. 
 
-> Essential is the `smnrp-data` volume. You should always bind mount this one to `/etc/letsencrypt` otherwise smnrp may create too many requests to let's encrypt.
+Essential is the `smnrp-data` volume. You should always bind mount this one to `/etc/letsencrypt` otherwise smnrp may create too many requests to let's encrypt.
 
 ## Maintenance mode
 
@@ -254,8 +264,6 @@ To add a custom maintenance page you need to overwrite the file `/usr/share/ngin
 ```
 
 ## Restrict access
-
-### Enable basic authentication
 
 To enable basic authentication on selected targets you need to flag the locations with the `a` flag and define the
 users and passwords using the `SMNRP_USERS` environment variable.
