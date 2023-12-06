@@ -275,3 +275,4 @@ To add a custom _Authorization Required_ page you need to overwrite the file `/u
   volumes:
     - ./my-auth_required.html:/usr/share/nginx/html/error/auth_required.html
 ```
+
