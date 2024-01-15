@@ -12,6 +12,7 @@ The _S_ ecure _M_ ultifuctional _N_ ginx _R_ everse _P_ roxy (SMNRP) is a revers
 - Basic authentication to specific locations
 - Customized `Content-Security-Policy`
 - OCSP stapling [(?)](https://www.ssls.com/knowledgebase/what-is-ocsp-stapling/)
+- Virtual host support (new in version 2)
 
 ## Getting started
 
@@ -22,7 +23,6 @@ To start with the most basic configuration to just reverse proxy a web applicati
 ```bash
 SMNRP_DOMAINS=domain.com,www.domain.com
 SMNRP_UPSTREAMS=api:5000
-SMNRP_UPSTREAM_PROTOCOL=http
 SMNRP_LOCATIONS=/api/!http://targets/api/,/api/static!/usr/share/static
 SMNRP_SELF_SIGNED=false
 SMNRP_SELF_SIGNED_RENEW=false
@@ -33,8 +33,7 @@ The following example shows the load balancing mode:
 
 ```bash
 SMNRP_DOMAINS=domain.com,www.domain.com
-SMNRP_UPSTREAMS=app.server1.com:443,app.server2.com:443
-SMNRP_UPSTREAM_PROTOCOL=https
+SMNRP_UPSTREAMS=app.server1.com:443,app.server2.com:443s
 SMNRP_LOCATIONS=/api/!https://targets/api/,/api/static!/usr/share/static
 SMNRP_SELF_SIGNED=false
 SMNRP_SELF_SIGNED_RENEW=false
@@ -52,11 +51,6 @@ SMNRP_OWN_CERT=false
 ```bash
 SMNRP_UPSTREAMS=api:5000,notebook!notebook:8888
 ```
-
-
-### `SMNRP_UPSTREAM_PROTOCOL`
-
-(optional) Define the protocoll to be used to communicate with the upstreams. This can be ether `http` or `https`.
 
 ### `SMNRP_LOCATIONS`
 
@@ -188,6 +182,20 @@ A comma separated list of `user:password` combinations to be allowed to do basic
 ```bash
 SMNRP_USERS=admin:admin,dave:pass
 ```
+
+## Add virtual host support
+
+To enable virtual hosts you need to use the `|` separator in the config variables:
+
+```bash
+SMNRP_DOMAINS=localhost,127.0.0.1|noti
+SMNRP_UPSTREAMS=|postman-echo.com:443
+SMNRP_LOCATIONS=/!/web_root/localhost/!t:a,/api/!https://postman-echo.com/get/|/api/!https://targets/get/
+SMNRP_SELF_SIGNED=true|true
+SMNRP_USERS=admin:secret,user1:xzy|user2:pass
+```
+
+The configuration will take the order into account. First section is the first vhost, second the second and so on.
 
 ## Apply custom configurations
 
