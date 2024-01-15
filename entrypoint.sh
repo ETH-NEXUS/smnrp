@@ -28,6 +28,7 @@ readarray -d '|' -t vhosts < <(printf '%s' "${SMNRP_DOMAINS}")
 readarray -d '|' -t vhost_csps < <(printf '%s' "${SMNRP_CSP}")
 readarray -d '|' -t vhost_upstreams < <(printf '%s' "${SMNRP_UPSTREAMS}")
 readarray -d '|' -t vhost_locations < <(printf '%s' "${SMNRP_LOCATIONS}")
+readarray -d '|' -t vhost_ssl_verify < <(printf '%s' "${SMNRP_SSL_VERIFY}")
 readarray -d '|' -t vhost_users < <(printf '%s' "${SMNRP_USERS}")
 readarray -d '|' -t vhost_client_max_body_size < <(printf '%s' "${SMNRP_CLIENT_MAX_BODY_SIZE}")
 readarray -d '|' -t vhost_own_cert < <(printf '%s' "${SMNRP_OWN_CERT}")
@@ -192,6 +193,7 @@ EOF
       if [[ $target == http* ]]; then
         cat >> ${location_config} << EOF
   proxy_pass $(echo "${target}" | sed -e "s|targets|${vhost_upstream_prefix}targets|");
+  proxy_ssl_verify ${vhost_ssl_verify[i]:on};
 EOF
       else
         echo "  alias ${target};" >> ${location_config}

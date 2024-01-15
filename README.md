@@ -115,6 +115,10 @@ location <path> {
 If you want to redirect to the configured unnamed upstream(s) you can use `targets` as the server name. If you want to redirect to another docker contatiner you need to use the _service name_ of the particular application.
 If you only want to proxy to other servers, just leave `SMNRP_LOCATIONS` empty.
 
+### `SMNRP_SSL_VERIFY`
+
+If set to `off` ssl verification for the proxy locations is disabled. Default is `on`.
+
 ### `SMNRP_REQUEST_ON_BOOT`
 
 If set to `true` smnrp requests a new certificate from Let's Encrypt on every boot.
