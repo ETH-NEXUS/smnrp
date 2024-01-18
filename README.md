@@ -189,14 +189,14 @@ SMNRP_USERS=admin:admin,dave:pass
 To enable virtual hosts you need to use the `|` separator in the config variables:
 
 ```bash
-SMNRP_DOMAINS=localhost,127.0.0.1|noti
+SMNRP_DOMAINS=domain.com,www.domain.com|otherdomain.com
 SMNRP_UPSTREAMS=|postman-echo.com:443
 SMNRP_LOCATIONS=/!/web_root/localhost/!t:a,/api/!https://postman-echo.com/get/|/api/!https://targets/get/
 SMNRP_SELF_SIGNED=true|true
 SMNRP_USERS=admin:secret,user1:xzy|user2:pass
 ```
 
-The configuration will take the order into account. First section is the first vhost, second the second and so on.
+The configuration will take the order into account. First section is the first vhost, second the second and so on. If you add vhost support for one config variable you need to add it for every other config variable as well except for `SMNRP_ENABLE_ANALYTICS`.
 
 ## Apply custom configurations
 
