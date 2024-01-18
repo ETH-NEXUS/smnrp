@@ -12,6 +12,7 @@ The _S_ ecure _M_ ultifuctional _N_ ginx _R_ everse _P_ roxy (SMNRP) is a revers
 - Basic authentication to specific locations
 - Customized `Content-Security-Policy`
 - OCSP stapling [(?)](https://www.ssls.com/knowledgebase/what-is-ocsp-stapling/)
+- Analytics website with traffic analytics
 - Virtual host support (new in version 2)
 
 ## Getting started
@@ -171,9 +172,9 @@ You can set the nginx servers global `client_max_body_size`. Default is `1m`.
 SMNRP_CLIENT_MAX_BODY_SIZE=1m
 ```
 
-### `SMNRP_DISABLE_ANALYTICS`
+### `SMNRP_ENABLE_ANALYTICS`
 
-By default smnrp is generating an analytics dashboard page based on [goaccess](https://goaccess.io/) in at `analytics/dashboard.html`. To disable this feature set `SMNRP_DISABLE_ANALYTICS` to `true`.
+If `true` smnrp is generating an analytics dashboard page based on [goaccess](https://goaccess.io/) in at `analytics/dashboard.html`. To enable this feature set `SMNRP_ENABLE_ANALYTICS` to `true`, default is `false`.
 
 ### `SMNRP_USERS`
 

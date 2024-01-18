@@ -54,6 +54,7 @@ do
     vhost_path_suffix="/${domain}"
     vhost_upstream_prefix="${domain}_"
     mkdir -p /web_root${vhost_path_suffix}
+    mkdir -p /var/log${vhost_path_suffix}
     cp /web_root/index.html /web_root${vhost_path_suffix}
     cp /web_root/favicon.ico /web_root${vhost_path_suffix}
     cp /web_root/background.jpg /web_root${vhost_path_suffix}
@@ -108,6 +109,9 @@ server {
   proxy_read_timeout 180s;
   proxy_redirect off;
   proxy_buffering off;
+
+  error_log  /var/log${vhost_path_suffix}/error.log error;
+  access_log  /var/log${vhost_path_suffix}/access.log combined;
 
   root /web_root${vhost_path_suffix};
   index index.html;
@@ -169,7 +173,7 @@ location /.well-known/acme-challenge/ {
     root /var/www/certbot;
 }
 location /ws/ {
-  proxy_pass http://localhost:7890;
+  proxy_pass http://localhost:789${i};
 }
 location /analytics/ {
   root /web_root${vhost_path_suffix};
@@ -383,9 +387,8 @@ nginx -s reload
 echo "### Waiting for nginx to start ..."
 wait -n
 
-if [[ "${SMNRP_DISABLE_ANALYTICS}" != 'true' ]]; then
-  echo "### Starting analyser in background"
-  sh -c "/analyser.sh" &
+if [[ "${SMNRP_ENABLE_ANALYTICS}" == 'true' ]]; then
+  sh -c "/analyser.sh"
 fi
 
 echo "### Staring nginx reloader in background"

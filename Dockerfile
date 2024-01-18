@@ -4,7 +4,7 @@ FROM nginx:1.24-bullseye
 # to make sure the requested certificates
 # are persistent
 VOLUME /etc/letsencrypt/live
-VOLUME /var/log/analytics
+VOLUME /var/log
 
 # Install the requirements
 RUN apt-get update && apt-get install -y \
@@ -16,10 +16,21 @@ RUN apt-get update && apt-get install -y \
   apache2-utils
 
 # Install goaccess
-RUN wget -O - https://deb.goaccess.io/gnugpg.key | gpg --dearmor | tee /usr/share/keyrings/goaccess.gpg >/dev/null && \
-  echo "deb [signed-by=/usr/share/keyrings/goaccess.gpg arch=$(dpkg --print-architecture)] https://deb.goaccess.io/ $(lsb_release -cs) main" | tee /etc/apt/sources.list.d/goaccess.list && \
-  apt-get update
-RUN apt-get install -y goaccess
+# RUN wget -O - https://deb.goaccess.io/gnugpg.key | gpg --dearmor | tee /usr/share/keyrings/goaccess.gpg >/dev/null && \
+#   echo "deb [signed-by=/usr/share/keyrings/goaccess.gpg arch=$(dpkg --print-architecture)] https://deb.goaccess.io/ $(lsb_release -cs) main" | tee /etc/apt/sources.list.d/goaccess.list && \
+#   apt-get update
+# RUN apt-get install -y goaccess
+RUN apt-get install -y \
+  build-essential \
+  libmaxminddb-dev \
+  libncursesw5-dev
+RUN wget https://tar.goaccess.io/goaccess-1.8.1.tar.gz && \
+  tar -xzvf goaccess-1.8.1.tar.gz && \
+  cd goaccess-1.8.1/ && \
+  ./configure --enable-utf8 --enable-geoip=mmdb && \
+  make && \
+  make install && \
+  cd .. && rm -rf goaccess-1.8.1
 
 # Clean up the apt cache
 RUN apt-get clean autoclean && apt-get autoremove -y && rm -rf /var/lib/{apt,dpkg,cache,log}/
@@ -58,5 +69,8 @@ COPY ./analyser.sh /analyser.sh
 COPY ./reloader.sh /reloader.sh
 COPY ./renewer.sh /renewer.sh
 RUN chmod 755 /entrypoint.sh /analyser.sh /reloader.sh /renewer.sh
+
+# Copy over the geoip databases
+COPY ./db /db
 
 ENTRYPOINT [ "/entrypoint.sh" ]
