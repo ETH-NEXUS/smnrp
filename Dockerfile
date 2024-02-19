@@ -1,9 +1,13 @@
 FROM nginx:1.24-bullseye
 
-# Define a volume for /etc/letsencrypt/live
+# Define a volume for /etc/letsencrypt
 # to make sure the requested certificates
 # are persistent
-VOLUME /etc/letsencrypt/live
+VOLUME /etc/letsencrypt
+
+# Define a volume for /var/log
+# to make sure the analytics data
+# is persistent
 VOLUME /var/log
 
 # Install the requirements
