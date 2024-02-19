@@ -1,6 +1,6 @@
-# Secure Multifunctional nginx Reverse Proxy
+# Secure Multifunctional Nginx Reverse Proxy
 
-The _Secure Multifuctional nginx Reverse Proxy (SMNRP)_ is a reverse proxy based on nginx.
+The _Secure Multifuctional Nginx Reverse Proxy (SMNRP)_ is a reverse proxy based on nginx.
 
 ![SMNRP](https://github.com/ETH-NEXUS/smnrp/blob/main/img/SMNRP.png)
 
