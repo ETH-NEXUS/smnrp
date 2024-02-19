@@ -2,7 +2,7 @@
 
 The _Secure Multifuctional Nginx Reverse Proxy (SMNRP)_ is a reverse proxy based on nginx.
 
-![SMNRP](https://github.com/ETH-NEXUS/smnrp/blob/main/img/SMNRP.png)
+![SMNRP](https://raw.githubusercontent.com/ETH-NEXUS/smnrp/main/img/SMNRP.png)
 
 ## Features
 
@@ -44,7 +44,7 @@ Let's start with some examples.
 
 To start with the most basic configuration to use `SMNRP` as a reverse proxy to a web application while requesting the certificates automatically from Let's Encrypt.
 
-![Example1](https://github.com/ETH-NEXUS/smnrp/blob/main/img/SMNRP_ex1.png)
+![Example1](https://raw.githubusercontent.com/ETH-NEXUS/smnrp/main/img/SMNRP_ex1.png)
 
 ```bash
 SMNRP_DOMAINS=dom.org,www.dom.org
@@ -62,7 +62,7 @@ The locations (`SMNRP_LOCATIONS`) can be configured in a comma separated list wh
 
 The following example shows the load balancing mode.
 
-![Example1](https://github.com/ETH-NEXUS/smnrp/blob/main/img/SMNRP_ex2.png)
+![Example2](https://raw.githubusercontent.com/ETH-NEXUS/smnrp/main/img/SMNRP_ex2.png)
 
 ```bash
 SMNRP_DOMAINS=dom.org,www.dom.org
@@ -85,7 +85,7 @@ The requests are equally distributed to the different targets. If one fails only
 
 ### Add virtual host support
 
-![Example1](https://github.com/ETH-NEXUS/smnrp/blob/main/img/SMNRP_ex3.png)
+![Example3](https://raw.githubusercontent.com/ETH-NEXUS/smnrp/main/img/SMNRP_ex3.png)
 
 To enable virtual hosts you need to use the `|` separator in the config variables:
 
