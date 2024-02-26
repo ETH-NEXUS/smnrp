@@ -231,6 +231,10 @@ SMNRP_CSP=none
 
 It's often a good idea to set this to `none` to avoid unexprected access problems. It should only be set if you need to extensively secure your web application.
 
+### `SMNRP_DISABLE_OCSP_STAPLING`
+
+If `true` ocsp-stapling is disabled.
+
 ### `SMNRP_CLIENT_MAX_BODY_SIZE`
 
 You can set the nginx servers global `client_max_body_size`. Default is `1m`. This must be set to support large file uploads through SMNRP.

@@ -34,6 +34,7 @@ readarray -d '|' -t vhost_own_cert < <(printf '%s' "${SMNRP_OWN_CERT}")
 readarray -d '|' -t vhost_self_signed < <(printf '%s' "${SMNRP_SELF_SIGNED}")
 readarray -d '|' -t vhost_self_signed_renew < <(printf '%s' "${SMNRP_SELF_SIGNED_RENEW}")
 readarray -d '|' -t vhost_request_on_boot < <(printf '%s' "${SMNRP_REQUEST_ON_BOOT}")
+readarray -d '|' -t vhost_disable_ocsp_stapling < <(printf '%s' "${SMNRP_DISABLE_OCSP_STAPLING}")
 
 if [ ${#vhosts[@]} -gt 1 ]; then
   VHOSTS=1
@@ -270,7 +271,7 @@ EOF
   # Ocsp stampling
   ###
   ocspstapling_config='/etc/nginx/conf.d/ocspstapling.nginx'
-  if [ "${vhost_self_signed[i]}" != 'true' ]; then
+  if [[ "${vhost_self_signed[i]}" != 'true' ]] && [[ "${vhost_disable_ocsp_stapling[i]}" != "true" ]]; then
     echo "### Enable OCSP Stapling"
     cat > ${ocspstapling_config} << EOF
 ssl_stapling on;
