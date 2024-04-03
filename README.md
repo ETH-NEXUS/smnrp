@@ -310,7 +310,12 @@ services:
 
 Your web application files need to be generated into the docker volume `web_root` that needs to be mapped to `/web_root`. In case of vhosts it should be bind mounted to `/web_root/<vhost>`
 
-Essential is the `smnrp_data` volume. It should **always** bind mounted to `/etc/letsencrypt`, otherwise SMNRP may create too many requests to Let's Encrypt and gets blocked for about 24h to request certificates.
+Essential is the `smnrp_data` volume. It should **always** bind mounted to `/etc/letsencrypt`, otherwise SMNRP may create too many requests to Let's Encrypt and gets blocked for about 24h to request certificates. 
+If you are using a local directory to bind mount `/etc/letsencrypt` (i.e. `./ssl:/etc/letsencrypt`) you must create the `ssl-dhparams.pem` in the root of this directory (i.e. `./ssl`) by using:
+
+```bash
+openssl dhparam -out ssl-dhparams.pem 4096 
+```
 
 ## Maintenance mode
 
