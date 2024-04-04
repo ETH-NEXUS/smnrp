@@ -372,3 +372,16 @@ To add a custom _Authorization Required_ page you need to overwrite the file `/u
     - ./my-auth_required.html:/usr/share/nginx/html/error/auth_required.html
 ```
 
+## Configure hardening parameters
+
+### `SMNRP_SERVER_TOKENS`
+
+Set the `server_tokens` parameter for this server, default is `off`.
+
+### `SMNRP_CLIENT_BODY_BUFFER_SIZE`
+
+Set the `client_body_buffer_size` parameter for this server, default is `1k`. Nginx default would be `8k|16k`
+
+### `SMNRP_LARGE_CLIENT_HEADER_BUFFERS`
+
+Set the `large_client_header_buffers` parameter for this server, default is `2 1k`. Nginx default would be `4 8k`
