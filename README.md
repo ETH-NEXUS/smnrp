@@ -288,9 +288,9 @@ services:
   ws:
     image: ethnexus/smnrp
     volumes: 
-      - "web_root:/web_root:ro"
+      - "web_root:/web_root"
       - "smnrp_data:/etc/letsencrypt"
-      - "./custom/configs:/etc/nginx/conf.d/custom"
+      # - "./custom/configs:/etc/nginx/conf.d/custom"
     ports:
       - "80:80"
       - "443:443"

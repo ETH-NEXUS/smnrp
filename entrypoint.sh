@@ -91,6 +91,10 @@ server {
   # enables HSTS for 1 year (31536000 seconds)
   add_header Strict-Transport-Security "max-age=31536000; includeSubdomains; preload";
 
+  # gitlab
+  proxy_hide_header Referrer-Policy;
+  add_header Referrer-Policy strict-origin-when-cross-origin;
+  
   add_header X-Frame-Options "SAMEORIGIN";
   add_header X-XSS-Protection "1; mode=block";
   add_header X-Content-Type-Options nosniff;
@@ -101,6 +105,7 @@ server {
   proxy_set_header X-Real-IP \$remote_addr;
   proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
   proxy_set_header X-Forwarded-Proto \$scheme;
+  proxy_set_header X-Forwarded-Ssl on;
   proxy_set_header X-Scheme \$scheme;
   # websocket headers
   proxy_http_version 1.1;
@@ -196,7 +201,7 @@ EOF
       fi
       if [[ $target == http* ]]; then
         cat >> ${location_config} << EOF
-  proxy_pass $(echo "${target}" | sed -e "s|targets|${vhost_upstream_prefix}targets|");
+  proxy_pass $(echo "${target}" | sed -E "s,(http(s)?:\/\/)(.*),\1${vhost_upstream_prefix}\3,");
 EOF
       else
         echo "  alias ${target};" >> ${location_config}
