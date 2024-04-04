@@ -35,6 +35,9 @@ readarray -d '|' -t vhost_self_signed < <(printf '%s' "${SMNRP_SELF_SIGNED}")
 readarray -d '|' -t vhost_self_signed_renew < <(printf '%s' "${SMNRP_SELF_SIGNED_RENEW}")
 readarray -d '|' -t vhost_request_on_boot < <(printf '%s' "${SMNRP_REQUEST_ON_BOOT}")
 readarray -d '|' -t vhost_disable_ocsp_stapling < <(printf '%s' "${SMNRP_DISABLE_OCSP_STAPLING}")
+readarray -d '|' -t vhost_server_tokens < <(printf '%s' "${SMNRP_SERVER_TOKENS}")
+readarray -d '|' -t vhost_client_body_buffer_size < <(printf '%s' "${SMNRP_CLIENT_BODY_BUFFER_SIZE}")
+readarray -d '|' -t vhost_large_client_header_buffers < <(printf '%s' "${SMNRP_LARGE_CLIENT_HEADER_BUFFERS}")
 
 if [ ${#vhosts[@]} -gt 1 ]; then
   VHOSTS=1
@@ -50,7 +53,6 @@ do
   vhost_path_suffix=''
   vhost_upstream_prefix=''
   listen_suffix=''
-  client_max_body_size="${vhost_client_max_body_size[i]:-1m}"
   if [ ${VHOSTS} -eq 1 ]; then
     vhost_path_suffix="/${domain}"
     vhost_upstream_prefix="${domain}_"
@@ -122,7 +124,12 @@ server {
   root /web_root${vhost_path_suffix};
   index index.html;
 
-  client_max_body_size ${client_max_body_size};
+  client_max_body_size ${vhost_client_max_body_size[i]:-1m};
+
+  # Hardening
+  server_tokens ${vhost_server_tokens[i]:-off};
+  client_body_buffer_size ${vhost_client_body_buffer_size[i]:-1k};
+  large_client_header_buffers ${vhost_large_client_header_buffers[i]:-2 1k};
 
   include /etc/nginx/conf.d/custom${vhost_path_suffix}/*.nginx;
   include /etc/nginx/conf.d/errorpages.nginx;
