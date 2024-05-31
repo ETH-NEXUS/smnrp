@@ -1,14 +1,14 @@
 version: "3"
 volumes:
-  smnrp_live:
+  smnrp_data:
   log_data:
 services:
-  smnrp:
+  ws:
     build: .
     ports:
       - "80:80"
       - "443:443"
     volumes:
-      - smnrp_live:/etc/letsencrypt/live
+      - smnrp_data:/etc/letsencrypt
       - log_data:/var/log
     env_file: .env

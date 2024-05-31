@@ -1,4 +1,4 @@
-FROM nginx:1.24-bullseye
+FROM nginx:1.27
 
 # Define a volume for /etc/letsencrypt
 # to make sure the requested certificates
@@ -28,13 +28,13 @@ RUN apt-get install -y \
   build-essential \
   libmaxminddb-dev \
   libncursesw5-dev
-RUN wget https://tar.goaccess.io/goaccess-1.8.1.tar.gz && \
-  tar -xzvf goaccess-1.8.1.tar.gz && \
-  cd goaccess-1.8.1/ && \
+RUN wget https://tar.goaccess.io/goaccess-1.9.2.tar.gz && \
+  tar -xzvf goaccess-1.9.2.tar.gz && \
+  cd goaccess-1.9.2/ && \
   ./configure --enable-utf8 --enable-geoip=mmdb && \
   make && \
   make install && \
-  cd .. && rm -rf goaccess-1.8.1
+  cd .. && rm -rf goaccess-1.9.2
 
 # Clean up the apt cache
 RUN apt-get clean autoclean && apt-get autoremove -y && rm -rf /var/lib/{apt,dpkg,cache,log}/
