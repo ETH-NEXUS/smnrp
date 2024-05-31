@@ -235,6 +235,10 @@ It's often a good idea to set this to `none` to avoid unexprected access problem
 
 If `true` ocsp-stapling is disabled.
 
+### `SMNRP_DISABLE_HTTPS`
+
+If set to `true` SMNRP will completely ignore https for communication and only listen on port 80 to serve the resources.
+
 ### `SMNRP_USERS`
 
 A comma separated list of `user:password` combinations to be allowed to do basic authentication on targets with the `a` flag.

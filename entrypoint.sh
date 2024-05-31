@@ -38,6 +38,7 @@ readarray -d '|' -t vhost_disable_ocsp_stapling < <(printf '%s' "${SMNRP_DISABLE
 readarray -d '|' -t vhost_server_tokens < <(printf '%s' "${SMNRP_SERVER_TOKENS}")
 readarray -d '|' -t vhost_client_body_buffer_size < <(printf '%s' "${SMNRP_CLIENT_BODY_BUFFER_SIZE}")
 readarray -d '|' -t vhost_large_client_header_buffers < <(printf '%s' "${SMNRP_LARGE_CLIENT_HEADER_BUFFERS}")
+readarray -d '|' -t vhost_disable_https < <(printf '%s' "${SMNRP_DISABLE_HTTPS}")
 
 if [ ${#vhosts[@]} -gt 1 ]; then
   VHOSTS=1
@@ -65,10 +66,20 @@ do
     listen_suffix=" default_server"
   fi
   echo "### Domain: ${domain}"
-  cat >> ${default_config} << EOF
+  if [[ "${vhost_disable_https[i]}" == 'true' ]]; then
+    cat >> ${default_config} << EOF
 server {
-  listen 443 ssl http2${listen_suffix};
+  listen 80${listen_suffix};
+  # listen [::]:80 http2${listen_suffix};
+  http2 on;
+  server_name ${domains[@]};
+EOF
+  else
+    cat >> ${default_config} << EOF
+server {
+  listen 443 ssl${listen_suffix};
   # listen [::]:443 ssl http2${listen_suffix};
+  http2 on;
   server_name ${domains[@]};
 
   ssl_certificate "/etc/letsencrypt/live/${domain}/fullchain.pem";
@@ -92,7 +103,10 @@ server {
 
   # enables HSTS for 1 year (31536000 seconds)
   add_header Strict-Transport-Security "max-age=31536000; includeSubdomains; preload";
-
+EOF
+  fi
+  # General part http and https
+  cat >> ${default_config} << EOF
   # gitlab
   proxy_hide_header Referrer-Policy;
   add_header Referrer-Policy strict-origin-when-cross-origin;
@@ -207,8 +221,13 @@ EOF
         default_root_location=0
       fi
       if [[ $target == http* ]]; then
+        if curl --head --silent ${target} > /dev/null 2>&1; then
+          target_to_use="${target}"
+        else
+          target_to_use=$(echo "${target}" | sed -E "s,(http(s)?:\/\/)(.*),\1${vhost_upstream_prefix}\3,")
+        fi
         cat >> ${location_config} << EOF
-  proxy_pass $(echo "${target}" | sed -E "s,(http(s)?:\/\/)(.*),\1${vhost_upstream_prefix}\3,");
+  proxy_pass ${target_to_use};
 EOF
       else
         echo "  alias ${target};" >> ${location_config}
@@ -283,7 +302,7 @@ EOF
   # Ocsp stampling
   ###
   ocspstapling_config='/etc/nginx/conf.d/ocspstapling.nginx'
-  if [[ "${vhost_self_signed[i]}" != 'true' ]] && [[ "${vhost_disable_ocsp_stapling[i]}" != "true" ]]; then
+  if [[ "${vhost_disable_https[i]}" != 'true' ]] && [[ "${vhost_self_signed[i]}" != 'true' ]] && [[ "${vhost_disable_ocsp_stapling[i]}" != "true" ]]; then
     echo "### Enable OCSP Stapling"
     cat > ${ocspstapling_config} << EOF
 ssl_stapling on;
@@ -320,6 +339,13 @@ do
   vhost=${vhosts[i]}
   readarray -d , -t domains < <(printf '%s' "${vhost}")
   domain=${domains[0]}
+  if [ "${vhost_disable_https[i]}" == "true" ]; then
+    echo "### HTTPS is disabled for ${vhost}, let's skip generating certificates ..."
+    # Remove the default certbot config that is listening on port 80
+    # otherwise we have a conflicting configuration
+    rm -f /etc/nginx/conf.d/certbot.conf
+    continue
+  fi
   if [ "${vhost_own_cert[i]}" == "true" ]; then
     echo "### Using own certificate for ${vhost} ..."
   else
@@ -393,7 +419,7 @@ EOF
 done # vhost done
 
 # We move back the original config
-mv /tmp/nginx/*.conf /etc/nginx/conf.d/. 
+mv /tmp/nginx/*.conf /etc/nginx/conf.d/.
 
 # Reload nginx
 nginx -s reload
