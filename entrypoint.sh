@@ -107,7 +107,6 @@ EOF
   fi
   # General part http and https
   cat >> ${default_config} << EOF
-  # gitlab
   proxy_hide_header Referrer-Policy;
   add_header Referrer-Policy strict-origin-when-cross-origin;
   
@@ -239,6 +238,13 @@ EOF
         echo '  auth_basic "Authorization Required";' >> ${location_config}
         echo "  auth_basic_user_file /etc/nginx/conf.d${vhost_path_suffix}/htpasswd;" >> ${location_config}
       fi
+      if [[ " ${flags[*]} " =~ " c " ]]; then
+        echo '  add_header Last-Modified $date_gmt;' >> ${location_config}
+        echo "  add_header Cache-Control 'private no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0';" >> ${location_config}
+        echo '  if_modified_since off;' >> ${location_config}
+        echo '  expires off;' >> ${location_config}
+        echo '  etag off;' >> ${location_config}
+      fi
       echo "}" >> ${location_config}
     done
     if [[ $default_root_location -eq 1 ]]; then
@@ -316,7 +322,6 @@ EOF
 done # END VHOSTS
 
 
-
 # We empty the config and leave only certbot.conf
 mkdir -p /tmp/nginx
 mv /etc/nginx/conf.d/*.conf /tmp/nginx/.
@@ -350,7 +355,7 @@ do
     echo "### Using own certificate for ${vhost} ..."
   else
     if [ "${vhost_self_signed[i]}" == 'true' ]; then
-      echo "### Generating self signed certificate for ${vhost} ..."
+      echo "### Using self signed certificate for ${vhost} ..."
       # mkdir -p /etc/letsencrypt/rootCA
       mkdir -p /etc/letsencrypt/live/${domain}
       if [[ "${vhost_self_signed_renew[i]}" == 'true' ]] || [[ ! -e /etc/letsencrypt/live/${domain}/csr.conf ]]; then
@@ -405,12 +410,14 @@ EOF
       if [[ "${vhost_request_on_boot[i]}" == 'true' ]] || [[ ! -e /etc/letsencrypt/live/${domain}/fullchain.pem ]]; then
         echo "### Requesting Let's Encrypt certificate for ${vhost} ..."
         rsa_key_size=4096
+        # certbot register -m 'root@localhost' --agree-tos --server 'https://api.buypass.com/acme/directory'
         certbot certonly --webroot -w /var/www/certbot \
           --register-unsafely-without-email \
           -d ${vhost} \
           --rsa-key-size $rsa_key_size \
           --agree-tos \
           --force-renewal
+          # --server 'https://api.buypass.com/acme/directory'
       else
         echo "### No new Let's Encrypt certificate request needed for ${vhost} ..."
       fi
@@ -423,7 +430,7 @@ mv /tmp/nginx/*.conf /etc/nginx/conf.d/.
 
 # Reload nginx
 nginx -s reload
-echo "### Waiting for nginx to start ..."
+echo "### Waiting for nginx to reload ..."
 wait -n
 
 if [[ "${SMNRP_ENABLE_ANALYTICS}" == 'true' ]]; then
