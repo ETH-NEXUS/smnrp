@@ -39,6 +39,7 @@ readarray -d '|' -t vhost_server_tokens < <(printf '%s' "${SMNRP_SERVER_TOKENS}"
 readarray -d '|' -t vhost_client_body_buffer_size < <(printf '%s' "${SMNRP_CLIENT_BODY_BUFFER_SIZE}")
 readarray -d '|' -t vhost_large_client_header_buffers < <(printf '%s' "${SMNRP_LARGE_CLIENT_HEADER_BUFFERS}")
 readarray -d '|' -t vhost_disable_https < <(printf '%s' "${SMNRP_DISABLE_HTTPS}")
+readarray -d '|' -t vhost_use_bypass < <(printf '%s' "${SMNRP_USE_BUYPASS}")
 
 if [ ${#vhosts[@]} -gt 1 ]; then
   VHOSTS=1
@@ -410,14 +411,25 @@ EOF
       if [[ "${vhost_request_on_boot[i]}" == 'true' ]] || [[ ! -e /etc/letsencrypt/live/${domain}/fullchain.pem ]]; then
         echo "### Requesting Let's Encrypt certificate for ${vhost} ..."
         rsa_key_size=4096
-        # certbot register -m 'root@localhost' --agree-tos --server 'https://api.buypass.com/acme/directory'
-        certbot certonly --webroot -w /var/www/certbot \
-          --register-unsafely-without-email \
-          -d ${vhost} \
-          --rsa-key-size $rsa_key_size \
-          --agree-tos \
-          --force-renewal
-          # --server 'https://api.buypass.com/acme/directory'
+        if [ ${vhost_use_bypass[i]} == 'true' ]; then
+          rm -rf /etc/letsencrypt/accounts
+          email=$(tmpmail -g)
+          certbot register -m ${email} \
+            --no-eff-email \
+            --agree-tos \
+            --server 'https://api.buypass.com/acme/directory'
+          certbot certonly --webroot -w /var/www/certbot \
+            -d ${vhost} \
+            --agree-tos \
+            --server 'https://api.buypass.com/acme/directory'
+        else
+          certbot certonly --webroot -w /var/www/certbot \
+            --register-unsafely-without-email \
+            -d ${vhost} \
+            --rsa-key-size $rsa_key_size \
+            --agree-tos \
+            --force-renewal
+        fi
       else
         echo "### No new Let's Encrypt certificate request needed for ${vhost} ..."
       fi

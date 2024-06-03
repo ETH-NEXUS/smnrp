@@ -240,6 +240,14 @@ If `true` ocsp-stapling is disabled.
 
 If set to `true` SMNRP will completely ignore https for communication and only listen on port 80 to serve the resources.
 
+### `SMNRP_USE_BUYPASS`
+
+If `true` smnrp uses Buypass certificate service in case of Let's Encrypt
+
+```bash
+SMNRP_USE_BUYPASS=false
+```
+
 ### `SMNRP_USERS`
 
 A comma separated list of `user:password` combinations to be allowed to do basic authentication on targets with the `a` flag.

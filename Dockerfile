@@ -17,7 +17,10 @@ RUN apt-get update && apt-get install -y \
   inotify-tools \
   wget \
   gpg \
-  apache2-utils
+  apache2-utils \
+  jq \ 
+  w3m \ 
+  xclip
 
 # Install goaccess
 # RUN wget -O - https://deb.goaccess.io/gnugpg.key | gpg --dearmor | tee /usr/share/keyrings/goaccess.gpg >/dev/null && \
@@ -35,6 +38,9 @@ RUN wget https://tar.goaccess.io/goaccess-1.9.2.tar.gz && \
   make && \
   make install && \
   cd .. && rm -rf goaccess-1.9.2
+
+# Install tmpmail
+RUN curl -sL "https://git.io/tmpmail" > /usr/bin/tmpmail && chmod +x /usr/bin/tmpmail
 
 # Clean up the apt cache
 RUN apt-get clean autoclean && apt-get autoremove -y && rm -rf /var/lib/{apt,dpkg,cache,log}/
