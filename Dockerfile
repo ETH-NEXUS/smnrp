@@ -72,7 +72,8 @@ COPY ./entrypoint.sh /entrypoint.sh
 COPY ./analyser.sh /analyser.sh
 COPY ./reloader.sh /reloader.sh
 COPY ./renewer.sh /renewer.sh
-RUN chmod 755 /entrypoint.sh /analyser.sh /reloader.sh /renewer.sh
+COPY ./smnrp_reset /smnrp_reset
+RUN chmod 755 /entrypoint.sh /analyser.sh /reloader.sh /renewer.sh /smnrp_reset
 
 # Copy over the geoip databases
 COPY ./db /db

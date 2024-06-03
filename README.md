@@ -400,3 +400,11 @@ Set the `large_client_header_buffers` parameter for this server, default is `2 1
 ```bash
 SMNRP_LARGE_CLIENT_HEADER_BUFFERS=2 1k
 ```
+
+## Reset smnrp
+
+If you went into troubles because of too many different configuration changes, you may want to reset smnrp:
+
+```bash
+docker exec <smnrp-container> smnrp_reset
+```

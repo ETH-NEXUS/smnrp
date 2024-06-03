@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+
+echo "Resetting SMNRP..."
+rm -rf /etc/letsencrypt/*
+echo "DONE, you can now relaunch the container..."
