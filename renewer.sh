@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 
 ts_file='/etc/letsencrypt/last_renew.ts'
+# ~12h
+timeout=43190
 
 readarray -d '|' -t vhosts < <(printf '%s' "${SMNRP_DOMAINS}")
 readarray -d '|' -t vhost_own_cert < <(printf '%s' "${SMNRP_OWN_CERT}")
@@ -24,14 +26,14 @@ do
       last=$(cat ${ts_file})
     fi
     now=$(date +%s)
-    diff=$(expr $now - $last)
+    diff=$(( $now - $last ))
     # we only renew to if last renew was ~12h ago
-    if [ $diff -gt 43190 ]; then
+    if [ $diff -gt $timeout ]; then
       echo "Trying to renew certificate..."
       certbot renew
       echo "$(date +%s)" > ${ts_file}
     else
-      echo "Still waiting for renewal ${diff}..."
+      echo "Postpone renewal for another $(( ($timeout - $diff) / 60 ))min..."
     fi
   fi
   # we wait 12h until next renew
