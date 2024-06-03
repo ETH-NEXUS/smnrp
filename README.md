@@ -276,7 +276,6 @@ A vhost configuration may contain all configuration entries as a configuration w
 To integrate `SMNRP` into docker compose to setup a reverse proxy to the application, you need to add the following part into you `docker-compose.yml`:
 
 ```yaml
-version: "3"
 volumes:
   web_root:
   smnrp_data:
@@ -284,12 +283,12 @@ services:
   ws:
     image: ethnexus/smnrp
     volumes: 
-      - "web_root:/web_root"
-      - "smnrp_data:/etc/letsencrypt"
+      - web_root:/web_root
+      - smnrp_data:/etc/letsencrypt
       # - "./custom/configs:/etc/nginx/conf.d/custom"
     ports:
-      - "80:80"
-      - "443:443"
+      - 80:80
+      - 443:443
     env_file: .env
     restart: unless-stopped
     depends_on:
