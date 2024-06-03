@@ -1,4 +1,3 @@
-version: "3"
 volumes:
   smnrp_data:
   log_data:
