@@ -10,6 +10,12 @@ if [ -z ${SMNRP_DOMAINS} ]; then
   exit 1
 fi
 
+# If there is no ssl-dhparams file, generate one
+if [ ! -e /etc/letsencrypt/ssl-dhparams.pem ]; then
+  echo "### Generating Diffie-Hellman (DH) parameters, this may take a while..."
+  openssl dhparam -out /etc/letsencrypt/ssl-dhparams.pem 4096
+fi
+
 echo "### Generating configuration files based on enviroment"
 default_config='/etc/nginx/conf.d/default.conf'
 rm -f ${default_config}
@@ -432,7 +438,7 @@ EOF
             --force-renewal
         fi
       else
-        echo "### No new Let's Encrypt certificate request needed for ${vhost} ..."
+        echo "### No new certificate request needed for ${vhost} ..."
       fi
     fi
   fi
