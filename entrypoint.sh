@@ -412,12 +412,13 @@ EOF
         echo "### Requesting Let's Encrypt certificate for ${vhost} ..."
         rsa_key_size=4096
         if [ ${vhost_use_bypass[i]} == 'true' ]; then
-          rm -rf /etc/letsencrypt/accounts
-          email=$(tmpmail -g)
-          certbot register -m ${email} \
-            --no-eff-email \
-            --agree-tos \
-            --server 'https://api.buypass.com/acme/directory'
+          if [ ! -d /etc/letsencrypt/accounts/api.buypass.com ]; then
+            email=$(tmpmail -g)
+            certbot register -m ${email} \
+              --no-eff-email \
+              --agree-tos \
+              --server 'https://api.buypass.com/acme/directory'
+          fi
           certbot certonly --webroot -w /var/www/certbot \
             -d ${vhost} \
             --agree-tos \
