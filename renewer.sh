@@ -33,7 +33,13 @@ do
       certbot renew
       echo "$(date +%s)" > ${ts_file}
     else
-      echo "Postpone renewal for another $(( ($timeout - $diff) / 60 ))min..."
+      pp_min=$(( ($timeout - $diff) / 60 ))
+      pp_h=$(( ($timeout - $diff) / 60 / 60 ))
+      if [ $pp_h -eq 0 ]; then
+        echo "Postpone renewal for another ${pp_min}min..."
+      else
+        echo "Postpone renewal for another ${pp_h}h..."
+      fi
     fi
   fi
   # we wait 12h until next renew
