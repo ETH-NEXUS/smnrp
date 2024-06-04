@@ -417,7 +417,7 @@ EOF
       if [[ "${vhost_request_on_boot[i]}" == 'true' ]] || [[ ! -e /etc/letsencrypt/live/${domain}/fullchain.pem ]]; then
         echo "### Requesting Let's Encrypt certificate for ${vhost} ..."
         rsa_key_size=4096
-        if [ ${vhost_use_bypass[i]} == 'true' ]; then
+        if [[ "${vhost_use_bypass[i]}" == 'true' ]]; then
           if [ ! -d /etc/letsencrypt/accounts/api.buypass.com ]; then
             email=$(tmpmail -g)
             certbot register -m ${email} \
