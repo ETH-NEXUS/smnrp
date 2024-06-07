@@ -137,7 +137,7 @@ The three parts are separated by a `!`.
 - **t**:  Adds a `try_files` clause to an alias location. This must be used if the files in the target need to be served.
 - **a**:  Adds a `auth_basic` clause to the location so that only `SMNRP_USERS` have access to it. `SMNRP_USERS` must be configured in order to make this working.
 - **c**:  Sets the headers to disables the browser cache.
-- **r**:  Returns a _permanent redirect_ (301) to the `alias` or `proxy_url`.
+- **r**:  Returns a _permanent redirect_ (301) to the `alias` or `proxy_url`. This flag can not be mixed with other flags.
 
 #### Example
 
