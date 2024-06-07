@@ -137,11 +137,12 @@ The three parts are separated by a `!`.
 - **t**:  Adds a `try_files` clause to an alias location. This must be used if the files in the target need to be served.
 - **a**:  Adds a `auth_basic` clause to the location so that only `SMNRP_USERS` have access to it. `SMNRP_USERS` must be configured in order to make this working.
 - **c**:  Sets the headers to disables the browser cache.
+- **r**:  Returns a _permanent redirect_ (301) to the `alias` or `proxy_url`.
 
 #### Example
 
 ```bash
-SMNRP_LOCATIONS=/!/web_root/dom.org/!t:a,/api/!https://postman-echo.com/get/
+SMNRP_LOCATIONS=/!/web_root/dom.org/!t:a,/api/!https://postman-echo.com/get/,/redirect/!/new-destination/!r
 ```
 
 This example _aliases_ (nginx: `alias`) the `/` path to `/web_root/dom.org/`, adds a `try_files` clause as well as a `auth_basic` clause to
@@ -174,6 +175,14 @@ location <path> {
 location <path> {
   auth_basic "Authorization Required";
   auth_basic_user_file <path_to_user_pw_list>;   <--[Derived from 'SMNRP_USERS']
+}
+```
+
+- for _permanent redirect_, only if flag `r` is set:
+
+```nginx
+location <path> {
+  return 301 <alias|proxy_url>;
 }
 ```
 

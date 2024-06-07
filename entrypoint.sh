@@ -13,7 +13,13 @@ fi
 # If there is no ssl-dhparams file, generate one
 if [ ! -e /etc/letsencrypt/ssl-dhparams.pem ]; then
   echo "### Generating Diffie-Hellman (DH) parameters, this may take a while..."
-  openssl dhparam -out /etc/letsencrypt/ssl-dhparams.pem 4096
+  # We only generate one if the SMNRP_GENERATE_DH_PARAMS parameter is set to true
+  # otherwise we copy over the template
+  if [ "${SMNRP_GENERATE_DH_PARAMS}" == 'true' ]; then
+    openssl dhparam -out /etc/letsencrypt/ssl-dhparams.pem 4096
+  else
+    cp /usr/share/nginx/ssl-dhparams.pem /etc/letsencrypt/ssl-dhparams.pem
+  fi
 fi
 
 echo "### Generating configuration files based on enviroment"
@@ -232,20 +238,26 @@ EOF
         else
           target_to_use=$(echo "${target}" | sed -E "s,(http(s)?:\/\/)(.*),\1${vhost_upstream_prefix}\3,")
         fi
-        cat >> ${location_config} << EOF
-  proxy_pass ${target_to_use};
-EOF
+        if [[ " ${flags[*]} " =~ " r " ]]; then
+          echo "  return 301 ${target_to_use};" >> ${location_config}
+        else
+          echo "  proxy_pass ${target_to_use};" >> ${location_config}
+        fi
       else
-        echo "  alias ${target};" >> ${location_config}
-        if [[ " ${flags[*]} " =~ " t " ]]; then
+        if [[ " ${flags[*]} " =~ " r " ]]; then
+          echo "  return 301 ${target};" >> ${location_config}
+        else
+          echo "  alias ${target};" >> ${location_config}
+        fi
+        if [[ " ${flags[*]} " =~ " t " ]] && [[ ! " ${flags[*]} " =~ " r " ]]; then
           echo "  try_files \$uri \$uri/ /index.html;" >> ${location_config}
         fi
       fi
-      if [[ " ${flags[*]} " =~ " a " ]]; then
+      if [[ " ${flags[*]} " =~ " a " ]] && [[ ! " ${flags[*]} " =~ " r " ]]; then
         echo '  auth_basic "Authorization Required";' >> ${location_config}
         echo "  auth_basic_user_file /etc/nginx/conf.d${vhost_path_suffix}/htpasswd;" >> ${location_config}
       fi
-      if [[ " ${flags[*]} " =~ " c " ]]; then
+      if [[ " ${flags[*]} " =~ " c " ]] && [[ ! " ${flags[*]} " =~ " r " ]]; then
         echo '  add_header Last-Modified $date_gmt;' >> ${location_config}
         echo "  add_header Cache-Control 'private no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0';" >> ${location_config}
         echo '  if_modified_since off;' >> ${location_config}

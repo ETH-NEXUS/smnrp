@@ -60,6 +60,7 @@ RUN mkdir -p /var/www/certbot
 
 # Add the dh-params to the image
 RUN mkdir -p /etc/letsencrypt
+COPY ./ssl-dhparams.pem /usr/share/nginx/ssl-dhparams.pem
 COPY ./ssl-dhparams.pem /etc/letsencrypt/ssl-dhparams.pem
 
 # Copy the nginx configurtion files
