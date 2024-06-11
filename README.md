@@ -385,6 +385,33 @@ To add a custom _Authorization Required_ page you need to overwrite the file `/u
     - ./my-auth_required.html:/usr/share/nginx/html/error/auth_required.html
 ```
 
+## Detect and handle certificate renewals on host
+
+`SMNRP` is adding a file called like the domain for which the certificate update happened into the directory `/signal`. You can bind mount this directory and run a cronjob on your host os to detect changes. An example script:
+
+```bash
+#!/usr/bin/env bash
+
+SIGNAL_DIR="/path/to/signal"
+DOMAIN="domain.of.interest"
+
+if [ -f "${SIGNAL_DIR}/${DOMAIN}" ]; then
+    echo "##############"
+    echo `date`
+    rm -f "${SIGNAL_DIR}/${DOMAIN}"
+    ### EXAMPLE to reload postfix
+    postfix reload
+    service dovecot reload
+    ### you can add your own logic here
+fi
+```
+
+The following entry can be added to the repository's owners crontab:
+
+```crontab
+* * * * * (sudo /path/to/scripts/certRenew.sh 2>&1) >> /path/to/logs/certRenew.log
+```
+
 ## Configure hardening parameters
 
 ### `SMNRP_CLIENT_MAX_BODY_SIZE`
