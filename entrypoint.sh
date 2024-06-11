@@ -194,16 +194,15 @@ EOF
       echo "### Upstream for ${domain}: ${target} --> ${upstream_to}"
       targets[$target]="${targets[$target]} ${upstream_to}"
     done
-    echo "### TARGET: ${!targets[@]}"
     for target in "${!targets[@]}"
     do
-      echo "upstream ${target} {" | tee -a ${upstream_config}
+      echo "upstream ${target} {" >> ${upstream_config}
       for _upstream in ${targets[$target]}
       do
-        echo "  server ${_upstream} max_fails=3 fail_timeout=10s;" | tee -a ${upstream_config}
-        echo "  keepalive 32;" | tee -a ${upstream_config}
+        echo "  server ${_upstream} max_fails=3 fail_timeout=10s;" >> ${upstream_config}
+        echo "  keepalive 32;" >> ${upstream_config}
       done
-      echo "}" | tee -a ${upstream_config}
+      echo "}" >> ${upstream_config}
     done
   else
     touch ${upstream_config}
