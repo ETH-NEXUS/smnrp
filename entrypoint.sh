@@ -60,6 +60,11 @@ else
   VHOSTS=0
 fi
 
+# We need to remove the upstreams in the beginning
+# because they are globally managed
+upstream_config="/etc/nginx/conf.d/upstreams.nginx"
+rm -f ${upstream_config}
+
 for i in "${!vhosts[@]}"
 do
   readarray -d , -t domains < <(printf '%s' "${vhosts[i]}")
@@ -173,8 +178,6 @@ EOF
   ###
   # Upstreams
   ###
-  upstream_config="/etc/nginx/conf.d/upstreams.nginx"
-  rm -f ${upstream_config}
   if [ ! -z ${vhost_upstreams[i]} ]; then
     readarray -d , -t upstreams < <(printf '%s' "${vhost_upstreams[i]}")
     declare -A targets
