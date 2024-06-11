@@ -35,7 +35,7 @@ map \$http_upgrade \$connection_upgrade {
 }
 EOF
 
-# Handline vhosts
+# Handling vhosts
 readarray -d '|' -t vhosts < <(printf '%s' "${SMNRP_DOMAINS}")
 readarray -d '|' -t vhost_csps < <(printf '%s' "${SMNRP_CSP}")
 readarray -d '|' -t vhost_upstreams < <(printf '%s' "${SMNRP_UPSTREAMS}")
@@ -180,7 +180,7 @@ EOF
   ###
   if [ ! -z ${vhost_upstreams[i]} ]; then
     readarray -d , -t upstreams < <(printf '%s' "${vhost_upstreams[i]}")
-    declare -A targets
+    declare -A targets=()
     for upstream in ${upstreams[@]}
     do
       if grep -q "!" <<< "${upstream}"; then
@@ -194,15 +194,16 @@ EOF
       echo "### Upstream for ${domain}: ${target} --> ${upstream_to}"
       targets[$target]="${targets[$target]} ${upstream_to}"
     done
+    echo "### TARGET: ${!targets[@]}"
     for target in "${!targets[@]}"
     do
-      echo "upstream ${target} {" >> ${upstream_config}
+      echo "upstream ${target} {" | tee -a ${upstream_config}
       for _upstream in ${targets[$target]}
       do
-        echo "  server ${_upstream} max_fails=3 fail_timeout=10s;" >> ${upstream_config}
-        echo "  keepalive 32;" >> ${upstream_config}
+        echo "  server ${_upstream} max_fails=3 fail_timeout=10s;" | tee -a ${upstream_config}
+        echo "  keepalive 32;" | tee -a ${upstream_config}
       done
-      echo "}" >> ${upstream_config}
+      echo "}" | tee -a ${upstream_config}
     done
   else
     touch ${upstream_config}
