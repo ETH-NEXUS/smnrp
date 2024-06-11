@@ -2,7 +2,7 @@
 
 ts_file='/etc/letsencrypt/last_renew.ts'
 # ~12h
-timeout=43190
+timeout=${SMNRP_RENEW_TIMEOUT:-43190}
 
 readarray -d '|' -t vhosts < <(printf '%s' "${SMNRP_DOMAINS}")
 readarray -d '|' -t vhost_own_cert < <(printf '%s' "${SMNRP_OWN_CERT}")
