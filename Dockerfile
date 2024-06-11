@@ -1,4 +1,4 @@
-FROM nginx:1.27
+FROM nginx:1.26
 
 # Define a volume for /etc/letsencrypt
 # to make sure the requested certificates
