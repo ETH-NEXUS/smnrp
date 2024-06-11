@@ -176,7 +176,7 @@ EOF
   upstream_config="/etc/nginx/conf.d/upstreams.nginx"
   rm -f ${upstream_config}
   if [ ! -z ${vhost_upstreams[i]} ]; then
-    readarray -d , -t upstreams < <(printf '%s'  "${vhost_upstreams[i]}")
+    readarray -d , -t upstreams < <(printf '%s' "${vhost_upstreams[i]}")
     declare -A targets
     for upstream in ${upstreams[@]}
     do
