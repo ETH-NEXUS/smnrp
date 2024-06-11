@@ -427,7 +427,6 @@ EOF
       fi
     else
       if [[ "${vhost_request_on_boot[i]}" == 'true' ]] || [[ ! -e /etc/letsencrypt/live/${domain}/fullchain.pem ]]; then
-        echo "### Requesting Let's Encrypt certificate for ${vhost} ..."
         rsa_key_size=4096
         if [[ "${vhost_use_bypass[i]}" == 'true' ]]; then
           if [ ! -d /etc/letsencrypt/accounts/api.buypass.com ]; then
@@ -437,11 +436,13 @@ EOF
               --agree-tos \
               --server 'https://api.buypass.com/acme/directory'
           fi
+          echo "### Requesting Buypass certificate for ${vhost} ..."
           certbot certonly --webroot -w /var/www/certbot \
             -d ${vhost} \
             --agree-tos \
             --server 'https://api.buypass.com/acme/directory'
         else
+          echo "### Requesting Let's Encrypt certificate for ${vhost} ..."
           certbot certonly --webroot -w /var/www/certbot \
             --register-unsafely-without-email \
             -d ${vhost} \
