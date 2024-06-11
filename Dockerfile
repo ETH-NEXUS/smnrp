@@ -51,9 +51,9 @@ RUN mkdir -p /web_root
 # Copy an initial index html to the webroot
 # normaly you would mount a directory
 # to the webroot what will shadow this default
-COPY ./nginx/index.html /web_root/index.html
-COPY ./nginx/background.jpg /web_root/background.jpg
-COPY ./nginx/favicon.ico /web_root/favicon.ico
+COPY ./nginx/index.html /usr/share/nginx/index.html
+COPY ./nginx/background.jpg /usr/share/nginx/background.jpg
+COPY ./nginx/favicon.ico /usr/share/nginx/favicon.ico
 
 # Create the webroot for certbot
 RUN mkdir -p /var/www/certbot
