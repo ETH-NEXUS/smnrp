@@ -7,13 +7,14 @@ timeout=${SMNRP_RENEW_TIMEOUT:-43190}
 readarray -d '|' -t vhosts < <(printf '%s' "${SMNRP_DOMAINS}")
 readarray -d '|' -t vhost_own_cert < <(printf '%s' "${SMNRP_OWN_CERT}")
 readarray -d '|' -t vhost_self_signed < <(printf '%s' "${SMNRP_SELF_SIGNED}")
+readarray -d '|' -t vhost_disable_https < <(printf '%s' "${SMNRP_DISABLE_HTTPS}")
 while true
 do
   renew=0
   for i in "${!vhosts[@]}"
   do
     # Check if there's at least one vhost with a let's encrypt certificate
-    if [[ "${vhost_own_cert[i]}" != 'true' ]] && [[ "${vhost_self_signed[i]}" != 'true' ]]; then
+    if [[ "${vhost_own_cert[i]}" != 'true' ]] && [[ "${vhost_self_signed[i]}" != 'true' ]] && [[ "${vhost_disable_https[i]}" != 'true' ]]; then
       renew=1
       break
     fi
