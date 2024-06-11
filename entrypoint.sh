@@ -72,13 +72,17 @@ do
     vhost_upstream_prefix="${domain}_"
     mkdir -p /web_root${vhost_path_suffix}
     mkdir -p /var/log${vhost_path_suffix}
-    cp /usr/share/nginx/index.html /web_root${vhost_path_suffix}
-    cp /usr/share/nginx/favicon.ico /web_root${vhost_path_suffix}
-    cp /usr/share/nginx/background.jpg /web_root${vhost_path_suffix}
+    if [ ! -f "/web_root${vhost_path_suffix}/index.html" ]; then
+      cp /usr/share/nginx/index.html /web_root${vhost_path_suffix}
+      cp /usr/share/nginx/favicon.ico /web_root${vhost_path_suffix}
+      cp /usr/share/nginx/background.jpg /web_root${vhost_path_suffix}
+    fi
   else
-    cp /usr/share/nginx/index.html /web_root/.
-    cp /usr/share/nginx/favicon.ico /web_root/.
-    cp /usr/share/nginx/background.jpg /web_root/.
+    if [ ! -f /web_root/index.html ]; then
+      cp /usr/share/nginx/index.html /web_root/.
+      cp /usr/share/nginx/favicon.ico /web_root/.
+      cp /usr/share/nginx/background.jpg /web_root/.
+    fi
     listen_suffix=" default_server"
   fi
   echo "### Domain: ${domain}"
