@@ -366,7 +366,7 @@ mkdir -p /tmp/nginx
 mv /etc/nginx/conf.d/*.conf /tmp/nginx/.
 mv /tmp/nginx/certbot.conf /etc/nginx/conf.d/.
 
-echo "### Staring nginx in background"
+echo "### Starting nginx in background"
 nginx
 if [ $? -ne 0 ]; then
   echo "^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^"
@@ -489,13 +489,13 @@ if [[ "${SMNRP_ENABLE_ANALYTICS}" == 'true' ]]; then
   sh -c "/analyser.sh"
 fi
 
-echo "### Staring nginx reloader in background"
+echo "### Starting nginx reloader in background"
 sh -c "/reloader.sh" &
 
 if [ ! -z $@ ]; then
   $@
 else
   # We start the certbot observer to check every 12h if a certificate has expired
-  echo "### Staring certbot renewal in background"
+  echo "### Starting certbot renewal in background"
   sh -c "/renewer.sh"
 fi

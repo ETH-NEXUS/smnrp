@@ -451,5 +451,5 @@ SMNRP_LARGE_CLIENT_HEADER_BUFFERS=2 1k
 If you went into troubles because of too many different configuration changes, you may want to reset smnrp:
 
 ```bash
-docker exec <smnrp-container> smnrp_reset
+docker exec <smnrp-container> /smnrp_reset
 ```
