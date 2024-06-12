@@ -143,10 +143,13 @@ EOF
 
   proxy_set_header Host \$host;
   proxy_set_header X-Real-IP \$remote_addr;
+  proxy_set_header X-Scheme \$scheme;
   proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
   proxy_set_header X-Forwarded-Proto \$scheme;
   proxy_set_header X-Forwarded-Ssl on;
-  proxy_set_header X-Scheme \$scheme;
+  # according to https://www.freecodecamp.org/news/docker-nginx-letsencrypt-easy-secure-reverse-proxy-40165ba3aee2/
+  proxy_set_header X-Forwarded-Host \$host;
+  proxy_set_header X-Forwarded-Port \$server_port;
   # websocket headers
   proxy_http_version 1.1;
   proxy_set_header Upgrade \$http_upgrade;
