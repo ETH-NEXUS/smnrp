@@ -8,6 +8,8 @@ do
   vhost_path_suffix="/${domain}"
   access_log=/var/log${vhost_path_suffix}/access.log
   mkdir -p /web_root${vhost_path_suffix}/analytics
+  mkdir -p /var/log${vhost_path_suffix}
+  touch ${access_log}
   echo "### Starting analyser for ${domain}..."
   goaccess ${access_log} -o /web_root${vhost_path_suffix}/analytics/dashboard.html \
     --log-format=COMBINED \
