@@ -10,6 +10,13 @@ if [ -z ${SMNRP_DOMAINS} ]; then
   exit 1
 fi
 
+# Prepare some paths and files
+# this is necessary if user wants to bind mount
+# various directories
+mkdir -p /var/log/nginx
+touch /var/log/nginx/error.log
+touch /var/log/nginx/access.log
+
 # If there is no ssl-dhparams file, generate one
 if [ ! -e /etc/letsencrypt/ssl-dhparams.pem ]; then
   echo "### Generating Diffie-Hellman (DH) parameters, this may take a while..."
