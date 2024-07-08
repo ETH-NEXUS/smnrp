@@ -8,7 +8,7 @@ The _Secure Multifuctional Nginx Reverse Proxy (SMNRP)_ is a reverse proxy based
 
 ### HTTPS Certificates
 
-- Automatic generation and renewal of https certificates ([using Let's Encrypt](https://letsencrypt.org/))
+- Automatic generation and renewal of https certificates (using [Let's Encrypt](https://letsencrypt.org/) or [Buypass](https://www.buypass.com/))
 - Automatic generation of a self signed certificate
 - Usage of custom certificates
 
@@ -16,25 +16,25 @@ The _Secure Multifuctional Nginx Reverse Proxy (SMNRP)_ is a reverse proxy based
 
 - Load balancer to different locations
 - Reverse proxy to a web application
-- Virtual host support (new since version 2)
+- Virtual host support
 
 ### Security features
 
 - High baseline security
 - Customized `Content-Security-Policy`
-- OCSP stapling [:information_source:](https://www.ssls.com/knowledgebase/what-is-ocsp-stapling/)
+- OCSP stapling [ℹ️](https://www.ssls.com/knowledgebase/what-is-ocsp-stapling/)
 - Basic authentication to specific locations
 
 ### Additional features
 
-- Analytics website with traffic analytics
-- Maintenance mode
+- [Analytics website with traffic analytics](#smnrp_enable_analytics)
+- [Maintenance mode](#maintenance-mode)
 
 ## Getting started
 
-SMNRP can be configured using only environment variables, what makes it ideal to implement into a configurable container. All possible configuration environment variables are described in this readme.
+SMNRP can be configured **using only environment variables**, what makes it ideal to implement into a configurable container. All possible configuration environment variables are described in this readme.
 
-To integrate the SMNRP into your web application you just need to configure the environment variables (in the `.env` file).
+To integrate the SMNRP into your web application you just need to configure the environment variables (e.g. in the `.env` file).
 
 Let's start with some examples.
 
@@ -54,9 +54,12 @@ SMNRP_LOCATIONS=/api/!http://targets/api/,/api/static!/usr/share/static
 
 In this example the domain names (`SMNRP_DOMAINS`) are provided. The first name in the comma separated list is used as the _common name (cn)_ in the certificate. The additional ones are configured as _Subject Alternative Names (SAN)_.
 
-Only a single upstream (`SMNRP_UPSTREAMS`) needs to be configured. This _anonymous_ upstream can be referenced as `target` in the locations (`SMNRP_LOCATIONS`) section.
+Only a single upstream (`SMNRP_UPSTREAMS`) needs to be configured. This _anonymous_ upstream can be referenced as `targets` in the locations (`SMNRP_LOCATIONS`) section.
 
-The locations (`SMNRP_LOCATIONS`) can be configured in a comma separated list where the parts are separated by `!`. In this example the `/api/` location will be _proxied_ (nginx: `proxy_pass`) to `http://targets/api/` and `/api/static` will be _aliased_ (nginx: `alias`) to `/usr/share/static`.
+The locations (`SMNRP_LOCATIONS`) can be configured in a comma separated list, where the parts are separated by `!`. In this example the
+
+- `/api/` location will be _proxied_ (nginx: `proxy_pass`) to `http://targets/api/` and 
+- `/api/static` will be _aliased_ (nginx: `alias`) to `/usr/share/static`.
 
 ### Simple load balancing
 
@@ -67,7 +70,7 @@ The following example shows the load balancing mode.
 ```bash
 SMNRP_DOMAINS=dom.org,www.dom.org
 SMNRP_UPSTREAMS=srv1.dom.org:443,srv2.dom.org:443
-SMNRP_LOCATIONS=/api/!https://targets/api/,/api/static!/usr/share/static
+SMNRP_LOCATIONS=/!https://targets/
 ```
 
 In this scenario the certificates are requested from Let's Encrypt as in the first example. The traffic is then load balanced to two servers `srv1.dom.org` and `srv2.dom.org`. The load balancing is internally configured as:
@@ -97,7 +100,10 @@ SMNRP_LOCATIONS=/!/web_root/dom.org/!t:a,/api/!https://postman-echo.com/get/|/ap
 
 The configuration will take the order into account. First section is the first vhost (`dom.org`), second the second (`otherdom.org`) and so on. If you add vhost support for one config variable you need to add it for every other config variable as well except for `SMNRP_ENABLE_ANALYTICS` (this is a global setting).
 
-In this example two vhosts are configured. **vhost1** does not have any upstream configured, where the upstream of **vhost2** is configured to be `postman-echo.com:443`. The first location for **vhost1** are configured as `/` to be _aliased_ (nginx: `alias`) to `/web_root/dom.org` as this is the directory inside SMNRP that is created to hold the files to be served for the vhost named `dom.org`. Additionally there are two flags configured for this location `t` and `a`. Those are described in details under the [Flags](####flags) section. The `/api/` location is _proxied_ (nginx: `proxy_pass`) to `https://postman-echo.com/get/`. The second vhost only _proxies_ the `/api/` location to `https://targets/get/`, what is basically the same as in vhost1 because the _upstream_ of vhost 2
+In this example two vhosts are configured. **vhost1** does not have any upstream configured, where the upstream of **vhost2** is configured to be `postman-echo.com:443`. The first location for **vhost1** is configured as `/` to be _aliased_ (nginx: `alias`) to `/web_root/dom.org` as this is the directory inside SMNRP that is created to hold the files to be served for the vhost named `dom.org`. Additionally there are two flags configured for this location `t` and `a`. Those are described in details under the [Flags](#flags) section.
+
+- The `/api/` location is _proxied_ (nginx: `proxy_pass`) to `https://postman-echo.com/get/`.
+- The second vhost only _proxies_ the `/api/` location to `https://targets/get/`, what is basically the same as in vhost1 because the _upstream_ of vhost 2.
 
 ## Configuration
 
@@ -112,6 +118,10 @@ If virtual hosts are configured the first entry is used as the folder name in th
 
 ```bash
 SMNRP_UPSTREAMS=api:5000,notebook!notebook:8888
+                ^^^      ^^^^^^^^^^^^^^^^^
+                |        |
+                |        + named target (referenced by 'notebook')
+                + unnamed target (referenced by 'targets')
 ```
 
 ### `SMNRP_LOCATIONS`
@@ -124,7 +134,7 @@ SMNRP_LOCATIONS=path!alias|proxy_url[!flags]
 
 The `path` is the url location that should be directed. A `path` need to be configured as the tail of the uri (e.g. `/api/`).
 
-The `alias` is a local directory inside SMNRP, normally bind mounted. An `alias` need to be configured as a path (e.g. `/usr/share/static` or `/web_root/<vhost>`).
+The `alias` is a local directory inside the SMNRP container, normally bind mounted. An `alias` need to be configured as a path (e.g. `/usr/share/static` or `/web_root/<vhost>`).
 
 The `proxy_url` defines a target outside of the SMNRP context. It could be an external web application or another container. A `proxy_url` need to be configured as a url (e.g. `https://target_name/api/` where `target_name` of the unnamed upstreams is `targets`).
 
@@ -137,7 +147,7 @@ The three parts are separated by a `!`.
 - **t**:  Adds a `try_files` clause to an alias location. This must be used if the files in the target need to be served.
 - **a**:  Adds a `auth_basic` clause to the location so that only `SMNRP_USERS` have access to it. `SMNRP_USERS` must be configured in order to make this working.
 - **c**:  Sets the headers to disables the browser cache.
-- **r**:  Returns a _permanent redirect_ (301) to the `alias` or `proxy_url`. This flag can not be mixed with other flags.
+- **r**:  Returns a _permanent redirect_ (HTTP Status Code: 301) to the `alias` or `proxy_url`. This flag can not be mixed with other flags.
 
 #### Example
 
@@ -145,8 +155,12 @@ The three parts are separated by a `!`.
 SMNRP_LOCATIONS=/!/web_root/dom.org/!t:a,/api/!https://postman-echo.com/get/,/redirect/!/new-destination/!r
 ```
 
-This example _aliases_ (nginx: `alias`) the `/` path to `/web_root/dom.org/`, adds a `try_files` clause as well as a `auth_basic` clause to
-the location section. The `/api/` path is _proxied_ (nginx: `proxy_pass`) to `https://postman-echo.com/get/`
+This example
+
+- _aliases_ (nginx: `alias`) the `/` path to `/web_root/dom.org/`, 
+- adds a `try_files` clause as well as a `auth_basic` clause to
+the location section. 
+- The `/api/` path is _proxied_ (nginx: `proxy_pass`) to `https://postman-echo.com/get/`.
 
 #### Translation to nginx config
 
@@ -202,7 +216,7 @@ If set to `true` SMNRP is generating self signed certificates instead of gatheri
 
 ### `SMNRP_SELF_SIGNED_RENEW`
 
-If set to `true` SMNRP will regenerate the self signed certificate on each start.
+If set to `true` SMNRP will regenerate the self signed certificate on each start - for debugging purposes.
 
 ### `SMNRP_OWN_CERT`
 
@@ -216,7 +230,7 @@ Here is an example:
 ```yaml
   ...
   ws:
-    image: ethnexus/SMNRP
+    image: ethnexus/smnrp
     volumes:
       ...
       - /path/to/dom.org.fullchain.pem:/etc/letsencrypt/live/dom.org/fullchain.pem:ro
@@ -239,19 +253,19 @@ If you want to completely disable the `Content-Security-Policy` header set `SMNR
 SMNRP_CSP=none
 ```
 
-It's often a good idea to set this to `none` to avoid unexprected access problems. It should only be set if you need to extensively secure your web application.
+It's often a good idea to set this to `none` to avoid unexpected access problems. It should only be set, if you need to extensively secure your web application.
 
 ### `SMNRP_DISABLE_OCSP_STAPLING`
 
-If `true` ocsp-stapling is disabled.
+If set to `true`, ocsp-stapling is disabled.
 
 ### `SMNRP_DISABLE_HTTPS`
 
-If set to `true` SMNRP will completely ignore https for communication and only listen on port 80 to serve the resources.
+If set to `true`, SMNRP will completely ignore https for communication and only listen on port 80 to serve the resources.
 
 ### `SMNRP_USE_BUYPASS`
 
-If `true` smnrp uses Buypass certificate service in case of Let's Encrypt
+If set to `true`, SMNRP uses Buypass certificate service in case of Let's Encrypt. This can be helpful, if there have been made too many requests to Let's Encrypt, disabling you from gathering new certificates.
 
 ```bash
 SMNRP_USE_BUYPASS=false
@@ -262,12 +276,12 @@ SMNRP_USE_BUYPASS=false
 A comma separated list of `user:password` combinations to be allowed to do basic authentication on targets with the `a` flag.
 
 ```bash
-SMNRP_USERS=admin:admin,user:pass
+SMNRP_USERS=admin:secret,user:pass
 ```
 
 ### `SMNRP_ENABLE_ANALYTICS`
 
-If `true` SMNRP is generating an analytics dashboard page based on [goaccess](https://goaccess.io/) at `analytics/dashboard.html`. To enable this feature set `SMNRP_ENABLE_ANALYTICS` to `true`, default is `false`.
+If set to `true`, SMNRP is generating an analytics dashboard page based on [goaccess](https://goaccess.io/) at `analytics/dashboard.html`, default is `false`.
 
 ## Virtual host configuration
 
@@ -289,6 +303,15 @@ A vhost configuration may contain all configuration entries as a configuration w
 
 `SMNRP` also loads `*.nginx` files in the directory `/etc/nginx/conf.d/custom/*.nginx`. You can bind mount or copy a local directory including your custom configs to `/etc/nginx/conf.d/custom/`.
 
+```yaml
+services:
+  ws:
+    image: ethnexus/smnrp
+    volumes: 
+      ...
+      - ./custom/configs:/etc/nginx/conf.d/custom
+```
+
 ## Integration into `docker-compose`
 
 To integrate `SMNRP` into docker compose to setup a reverse proxy to the application, you need to add the following part into you `docker-compose.yml`:
@@ -297,13 +320,14 @@ To integrate `SMNRP` into docker compose to setup a reverse proxy to the applica
 volumes:
   web_root:
   smnrp_data:
+  log_data:
 services:
   ws:
     image: ethnexus/smnrp
     volumes: 
       - web_root:/web_root
       - smnrp_data:/etc/letsencrypt
-      # - "./custom/configs:/etc/nginx/conf.d/custom"
+      - log_data:/var/log
     ports:
       - 80:80
       - 443:443
@@ -328,6 +352,28 @@ If you are using a local directory to bind mount `/etc/letsencrypt` (i.e. `./ssl
 
 ```bash
 openssl dhparam -out ssl-dhparams.pem 4096 
+```
+
+### Integration into `docker-compose` while chaining `SMNRP` instances
+
+In case you want to chaing `SMNRP` instances on the same host you need to configure the 
+
+- `network_mode` to `host` and
+- omit the `ports` configuration.
+
+```yaml
+volumes:
+  smnrp_data:
+  log_data:
+services:
+  ws:
+    image: ethnexus/smnrp
+    volumes: 
+      - smnrp_data:/etc/letsencrypt
+      - log_data:/var/log
+    env_file: .env
+    restart: unless-stopped
+    network_mode: host
 ```
 
 ## Maintenance mode
@@ -363,9 +409,9 @@ else
 fi
 ```
 
-## Restrict access
+## Restrict access to a location
 
-To enable basic authentication on selected targets you need to flag the locations with the `a` flag and define the
+To enable basic authentication on selected locations you need to flag the location with the `a` flag and define the
 users and passwords using the `SMNRP_USERS` environment variable.
 
 ```bash
@@ -373,7 +419,10 @@ SMNRP_LOCATIONS=/!/web_root/!t:a
 SMNRP_USERS=admin:admin,user:pass
 ```
 
-This example restricts the access to the `/` location to the users `admin` with the password `admin` and the user `user` with the password `pass` using _Basic Authentication_.
+This example restricts the access to the
+
+- `/` location to the users `admin` with the password `admin` and 
+- the user `user` with the password `pass` using _Basic Authentication_.
 
 ### Change the Authorization Required page
 
@@ -387,7 +436,7 @@ To add a custom _Authorization Required_ page you need to overwrite the file `/u
 
 ## Detect and handle certificate renewals on host
 
-`SMNRP` is adding a file called like the domain for which the certificate update happened into the directory `/signal`. You can bind mount this directory and run a cronjob on your host os to detect changes. An example script:
+`SMNRP` is adding a file called like the domain for which the certificate update happened into the directory `/signal`. You can bind mount this directory and run a cronjob on your host os to detect changes. This can be essential, for example if you want to restart a mail server after the Let's Encrypt certificate has been renewed. An example script could look like this:
 
 ```bash
 #!/usr/bin/env bash
@@ -412,7 +461,20 @@ The following entry can be added to the repository's owners crontab:
 * * * * * (sudo /path/to/scripts/certRenew.sh 2>&1) >> /path/to/logs/certRenew.log
 ```
 
+## Reset smnrp
+
+If you went into troubles because of too many different configuration changes, you may want to reset smnrp:
+
+```bash
+docker exec <smnrp-container> /smnrp_reset
+docker restart <smnrp-container>
+```
+
+This will basically remove already downloaded certificates and forces `SMNRP` to request a new certificate after the container restart.
+
 ## Configure hardening parameters
+
+ℹ️ The default values are the most secure ones.
 
 ### `SMNRP_CLIENT_MAX_BODY_SIZE`
 
@@ -444,12 +506,4 @@ Set the `large_client_header_buffers` parameter for this server, default is `2 1
 
 ```bash
 SMNRP_LARGE_CLIENT_HEADER_BUFFERS=2 1k
-```
-
-## Reset smnrp
-
-If you went into troubles because of too many different configuration changes, you may want to reset smnrp:
-
-```bash
-docker exec <smnrp-container> /smnrp_reset
 ```
