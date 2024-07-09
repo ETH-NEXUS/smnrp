@@ -188,6 +188,7 @@ EOF
   ###
   # Upstreams
   ###
+  declare -A upstream_names=()
   if [ ! -z ${vhost_upstreams[i]} ]; then
     readarray -d , -t upstreams < <(printf '%s' "${vhost_upstreams[i]}")
     declare -A targets=()
@@ -197,6 +198,7 @@ EOF
         parts=($(echo "$upstream" | tr '!' '\n'))
         target="${vhost_upstream_prefix}${parts[0]}"
         upstream_to=${parts[1]}
+        upstream_names+=(${parts[0]})
       else
         target="${vhost_upstream_prefix}targets"
         upstream_to="${upstream}"
@@ -253,7 +255,9 @@ EOF
         default_root_location=0
       fi
       if [[ $target == http* ]]; then
-        if curl --head --silent ${target} > /dev/null 2>&1; then
+        # if curl --head --silent ${target} > /dev/null 2>&1; then
+        potential_upstream_name=$(echo "${target}" | sed -E "s,(http(s)?:\/\/)([^/]+).*,\3,")
+        if echo ${upstream_names[@]} | grep -q ${potential_upstream_name}; then
           target_to_use="${target}"
         else
           target_to_use=$(echo "${target}" | sed -E "s,(http(s)?:\/\/)(.*),\1${vhost_upstream_prefix}\3,")
