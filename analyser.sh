@@ -5,7 +5,10 @@ for i in "${!vhosts[@]}"
 do
   readarray -d , -t domains < <(printf '%s' "${vhosts[i]}")
   domain=${domains[0]}
-  vhost_path_suffix="/${domain}"
+  vhost_path_suffix=''
+  if [ ${#vhosts[@]} -gt 1 ]; then
+    vhost_path_suffix="/${domain}"
+  fi
   access_log=/var/log${vhost_path_suffix}/access.log
   mkdir -p /web_root${vhost_path_suffix}/analytics
   mkdir -p /var/log${vhost_path_suffix}
