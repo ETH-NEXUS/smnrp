@@ -387,6 +387,18 @@ do
   vhost=${vhosts[i]}
   readarray -d , -t domains < <(printf '%s' "${vhost}")
   domain=${domains[0]}
+  domains_md5=$(echo "${domains[@]}" | md5sum | awk '{print $1}')
+  domains_hash_file="/etc/letsencrypt/${domain}.hash"
+  last_domains_md5=''
+  if [ -e ${domains_hash_file} ]; then
+    last_domains_md5=$(cat ${domains_hash_file})
+  fi
+  domain_config_changed=0
+  if [ "${domains_md5}" != "${last_domains_md5}" ]; then
+    echo "### Domain config has changed, taking required actions..."
+    echo "${domains_md5}" > ${domains_hash_file}
+    domain_config_changed=1
+  fi
   if [ "${vhost_disable_https[i]}" == "true" ]; then
     echo "### HTTPS is disabled for ${vhost}, let's skip generating certificates ..."
     # Remove the default certbot config that is listening on port 80
@@ -439,7 +451,7 @@ EOF
           fi
         done
       fi
-      if [[ "${vhost_self_signed_renew[i]}" == 'true' ]] || [[ ! -e /etc/letsencrypt/live/${domain}/fullchain.pem ]]; then
+      if [[ "${domain_config_changed}" -eq 1 ]] || [[ "${vhost_self_signed_renew[i]}" == 'true' ]] || [[ ! -e /etc/letsencrypt/live/${domain}/fullchain.pem ]]; then
         openssl req \
           -x509 \
           -nodes \
@@ -450,7 +462,7 @@ EOF
           -config /etc/letsencrypt/live/${domain}/csr.conf
       fi
     else
-      if [[ "${vhost_request_on_boot[i]}" == 'true' ]] || [[ ! -e /etc/letsencrypt/live/${domain}/fullchain.pem ]]; then
+      if [[ "${domain_config_changed}" -eq 1 ]] || [[ "${vhost_request_on_boot[i]}" == 'true' ]] || [[ ! -e /etc/letsencrypt/live/${domain}/fullchain.pem ]]; then
         rsa_key_size=4096
         if [[ "${vhost_use_bypass[i]}" == 'true' ]]; then
           if [ ! -d /etc/letsencrypt/accounts/api.buypass.com ]; then
