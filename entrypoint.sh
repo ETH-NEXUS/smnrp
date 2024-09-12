@@ -263,7 +263,7 @@ EOF
           target_to_use=$(echo "${target}" | sed -E "s,(http(s)?:\/\/)(.*),\1${vhost_upstream_prefix}\3,")
         fi
         if [[ " ${flags[*]} " =~ " r " ]]; then
-          echo "  return 301 ${target_to_use};" >> ${location_config}
+          echo "  return 301 ${target};" >> ${location_config}
         else
           echo "  proxy_pass ${target_to_use};" >> ${location_config}
         fi
