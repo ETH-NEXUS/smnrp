@@ -316,10 +316,16 @@ EOF
     rm -f ${auth_config}
     readarray -d , -t users < <(printf '%s' "${vhost_users[i]}")
     for user in ${users[@]}
-    do
+    do    
       parts=($(echo "$user" | tr ':' '\n'))
       _user=${parts[0]}
       _pass=${parts[1]}
+      if [ -z "$_pass" ]; then
+        echo "^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^"
+        echo "No password set for user $_user!"
+        echo "Set a password and restart the container"
+        exit 1
+      fi
       echo "### User for ${domain}: ${_user}"
       htpasswd -bc "${auth_config}" "${_user}" "${_pass}"
     done
