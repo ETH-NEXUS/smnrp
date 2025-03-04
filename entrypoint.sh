@@ -288,6 +288,29 @@ EOF
         echo '  expires off;' >> ${location_config}
         echo '  etag off;' >> ${location_config}
       fi
+      if [[ " ${flags[*]} " =~ " i " ]] && [[ ! " ${flags[*]} " =~ " r " ]]; then
+        # IP restriction - only allow specific IPs
+        echo '  # IP restriction - only allow access from ETH network' >> ${location_config}
+        echo '  allow 127.0.0.1;' >> ${location_config}
+        # ETH Zurich and private networks
+        echo '  allow 82.130.64.0/18;' >> ${location_config}
+        echo '  allow 129.132.0.0/16;' >> ${location_config}
+        echo '  allow 148.187.14.0/24;' >> ${location_config}
+        echo '  allow 148.187.128.0/18;' >> ${location_config}
+        echo '  allow 148.187.192.0/19;' >> ${location_config}
+        echo '  allow 192.33.87.0/24;' >> ${location_config}
+        echo '  allow 192.33.88.0/21;' >> ${location_config}
+        echo '  allow 192.33.96.0/21;' >> ${location_config}
+        echo '  allow 192.33.104.0/22;' >> ${location_config}
+        echo '  allow 192.33.108.0/23;' >> ${location_config}
+        echo '  allow 192.33.110.0/24;' >> ${location_config}
+        echo '  allow 195.176.96.0/19;' >> ${location_config}
+        # Private networks
+        echo '  allow 10.0.0.0/8;' >> ${location_config}
+        echo '  allow 172.16.0.0/12;' >> ${location_config}
+        echo '  allow 192.168.0.0/16;' >> ${location_config}
+        echo '  deny all;' >> ${location_config}
+      fi
       echo "}" >> ${location_config}
     done
     if [[ $default_root_location -eq 1 ]]; then

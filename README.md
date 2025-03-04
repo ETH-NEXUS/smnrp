@@ -147,6 +147,7 @@ The three parts are separated by a `!`.
 - **t**:  Adds a `try_files` clause to an alias location. This must be used if the files in the target need to be served.
 - **a**:  Adds a `auth_basic` clause to the location so that only `SMNRP_USERS` have access to it. `SMNRP_USERS` must be configured in order to make this working.
 - **c**:  Sets the headers to disables the browser cache.
+- **i**:  Restricts access to the location to requests from the ETHZ network.
 - **r**:  Returns a _permanent redirect_ (HTTP Status Code: 301) to the `alias` or `proxy_url`. This flag can not be mixed with other flags.
 
 #### Example
@@ -189,6 +190,32 @@ location <path> {
 location <path> {
   auth_basic "Authorization Required";
   auth_basic_user_file <path_to_user_pw_list>;   <--[Derived from 'SMNRP_USERS']
+}
+```
+
+- for IP restriction, only if flag `i` is set:
+
+```nginx
+location <path> {
+  allow 127.0.0.1;                 <--[Localhost is always allowed]
+  # ETH Zurich networks
+  allow 82.130.64.0/18;
+  allow 129.132.0.0/16;
+  allow 148.187.14.0/24;
+  allow 148.187.128.0/18;
+  allow 148.187.192.0/19;
+  allow 192.33.87.0/24;
+  allow 192.33.88.0/21;
+  allow 192.33.96.0/21;
+  allow 192.33.104.0/22;
+  allow 192.33.108.0/23;
+  allow 192.33.110.0/24;
+  allow 195.176.96.0/19;
+  # Private networks
+  allow 10.0.0.0/8;
+  allow 172.16.0.0/12;
+  allow 192.168.0.0/16;
+  deny all;                        <--[All other IPs are denied]
 }
 ```
 
