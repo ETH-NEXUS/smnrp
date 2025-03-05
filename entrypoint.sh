@@ -48,6 +48,7 @@ readarray -d '|' -t vhost_csps < <(printf '%s' "${SMNRP_CSP}")
 readarray -d '|' -t vhost_upstreams < <(printf '%s' "${SMNRP_UPSTREAMS}")
 readarray -d '|' -t vhost_locations < <(printf '%s' "${SMNRP_LOCATIONS}")
 readarray -d '|' -t vhost_users < <(printf '%s' "${SMNRP_USERS}")
+readarray -d '|' -t vhost_whitelist < <(printf '%s' "${SMNRP_WHITELIST}")
 readarray -d '|' -t vhost_client_max_body_size < <(printf '%s' "${SMNRP_CLIENT_MAX_BODY_SIZE}")
 readarray -d '|' -t vhost_own_cert < <(printf '%s' "${SMNRP_OWN_CERT}")
 readarray -d '|' -t vhost_self_signed < <(printf '%s' "${SMNRP_SELF_SIGNED}")
@@ -59,7 +60,6 @@ readarray -d '|' -t vhost_client_body_buffer_size < <(printf '%s' "${SMNRP_CLIEN
 readarray -d '|' -t vhost_large_client_header_buffers < <(printf '%s' "${SMNRP_LARGE_CLIENT_HEADER_BUFFERS}")
 readarray -d '|' -t vhost_disable_https < <(printf '%s' "${SMNRP_DISABLE_HTTPS}")
 readarray -d '|' -t vhost_use_bypass < <(printf '%s' "${SMNRP_USE_BUYPASS}")
-readarray -d '|' -t vhost_whitelist < <(printf '%s' "${SMNRP_WHITELIST}")
 
 if [ ${#vhosts[@]} -gt 1 ]; then
   VHOSTS=1
@@ -251,6 +251,9 @@ EOF
       flags=($(echo "${parts[2]}" | tr ':' '\n'))
       echo "location ${uri} {" >> ${location_config}
       echo "### Target for ${domain}: ${uri} --> ${target}"
+      if [ ! -z ${flags} ]; then
+        echo "### Flags for ${uri}: ${flags}"
+      fi
       if [[ "$uri" == "/" ]]; then
         echo "### Skipping default / target because it's configured as a location to ${target}."
         default_root_location=0
@@ -267,6 +270,10 @@ EOF
           echo "  return 301 ${target};" >> ${location_config}
         else
           echo "  proxy_pass ${target_to_use};" >> ${location_config}
+        fi
+        if [[ " ${flags[*]} " =~ " h " ]] && [[ ! " ${flags[*]} " =~ " r " ]]; then
+          echo '  proxy_set_header Host $http_host;' >> ${location_config}
+          echo '  proxy_set_header X-Forwarded-Host $http_host;' >> ${location_config}
         fi
       else
         if [[ " ${flags[*]} " =~ " r " ]]; then
@@ -290,6 +297,7 @@ EOF
         echo '  etag off;' >> ${location_config}
       fi
       if [[ " ${flags[*]} " =~ " w " ]] && [[ ! " ${flags[*]} " =~ " r " ]]; then
+        echo "### Configure whitelisting on location ${uri} to only allow: ${vhost_whitelist[i]}..."
         if [ ! -z ${vhost_whitelist[i]} ]; then
           readarray -d , -t ips < <(printf '%s' "${vhost_whitelist[i]}")
           for ip in ${ips[@]}
@@ -297,10 +305,7 @@ EOF
             echo "  allow ${ip};" >> ${location_config}
           done
           echo '  deny all;' >> ${location_config}
-      fi
-      if [[ " ${flags[*]} " =~ " h " ]] && [[ ! " ${flags[*]} " =~ " r " ]]; then
-        echo '  proxy_set_header Host $http_host;' >> ${location_config}
-        echo '  proxy_set_header X-Forwarded-Host $http_host;' >> ${location_config}
+        fi
       fi
       echo "}" >> ${location_config}
     done
