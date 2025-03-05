@@ -59,6 +59,7 @@ readarray -d '|' -t vhost_client_body_buffer_size < <(printf '%s' "${SMNRP_CLIEN
 readarray -d '|' -t vhost_large_client_header_buffers < <(printf '%s' "${SMNRP_LARGE_CLIENT_HEADER_BUFFERS}")
 readarray -d '|' -t vhost_disable_https < <(printf '%s' "${SMNRP_DISABLE_HTTPS}")
 readarray -d '|' -t vhost_use_bypass < <(printf '%s' "${SMNRP_USE_BUYPASS}")
+readarray -d '|' -t vhost_whitelist < <(printf '%s' "${SMNRP_WHITELIST}")
 
 if [ ${#vhosts[@]} -gt 1 ]; then
   VHOSTS=1
@@ -288,28 +289,18 @@ EOF
         echo '  expires off;' >> ${location_config}
         echo '  etag off;' >> ${location_config}
       fi
-      if [[ " ${flags[*]} " =~ " i " ]] && [[ ! " ${flags[*]} " =~ " r " ]]; then
-        # IP restriction - only allow specific IPs
-        echo '  # IP restriction - only allow access from ETH network' >> ${location_config}
-        echo '  allow 127.0.0.1;' >> ${location_config}
-        # ETH Zurich and private networks
-        echo '  allow 82.130.64.0/18;' >> ${location_config}
-        echo '  allow 129.132.0.0/16;' >> ${location_config}
-        echo '  allow 148.187.14.0/24;' >> ${location_config}
-        echo '  allow 148.187.128.0/18;' >> ${location_config}
-        echo '  allow 148.187.192.0/19;' >> ${location_config}
-        echo '  allow 192.33.87.0/24;' >> ${location_config}
-        echo '  allow 192.33.88.0/21;' >> ${location_config}
-        echo '  allow 192.33.96.0/21;' >> ${location_config}
-        echo '  allow 192.33.104.0/22;' >> ${location_config}
-        echo '  allow 192.33.108.0/23;' >> ${location_config}
-        echo '  allow 192.33.110.0/24;' >> ${location_config}
-        echo '  allow 195.176.96.0/19;' >> ${location_config}
-        # Private networks
-        echo '  allow 10.0.0.0/8;' >> ${location_config}
-        echo '  allow 172.16.0.0/12;' >> ${location_config}
-        echo '  allow 192.168.0.0/16;' >> ${location_config}
-        echo '  deny all;' >> ${location_config}
+      if [[ " ${flags[*]} " =~ " w " ]] && [[ ! " ${flags[*]} " =~ " r " ]]; then
+        if [ ! -z ${vhost_whitelist[i]} ]; then
+          readarray -d , -t ips < <(printf '%s' "${vhost_whitelist[i]}")
+          for ip in ${ips[@]}
+          do
+            echo "  allow ${ip};" >> ${location_config}
+          done
+          echo '  deny all;' >> ${location_config}
+      fi
+      if [[ " ${flags[*]} " =~ " h " ]] && [[ ! " ${flags[*]} " =~ " r " ]]; then
+        echo '  proxy_set_header Host $http_host;' >> ${location_config}
+        echo '  proxy_set_header X-Forwarded-Host $http_host;' >> ${location_config}
       fi
       echo "}" >> ${location_config}
     done

@@ -149,6 +149,7 @@ The three parts are separated by a `!`.
 - **c**:  Sets the headers to disables the browser cache.
 - **i**:  Restricts access to the location to requests from the ETHZ network.
 - **r**:  Returns a _permanent redirect_ (HTTP Status Code: 301) to the `alias` or `proxy_url`. This flag can not be mixed with other flags.
+- **h**:  Sends the `$http_host` instead of `$host` as `Host` and `X-Forwarded-Host` proxy headers.
 
 #### Example
 
@@ -233,6 +234,16 @@ If you want to redirect to another container you need to use the _service name_ 
 
 If you only want to proxy to the configured upstreams (`SMNRP_UPSTREAMS`), just leave `SMNRP_LOCATIONS` empty.
 
+- for `$http_host` instead of `$host`, if `h` flag is set:
+
+```nginx
+location <path> {
+  ...
+  proxy_set_header Host $http_host;
+  proxy_set_header X-Forwarded-Host $http_host;
+}
+```
+
 ### `SMNRP_REQUEST_ON_BOOT`
 
 If set to `true` SMNRP requests a new certificate from Let's Encrypt on every boot. Do not force this - it leads to problems getting a certificate because of too many requests. This is meant to be used in case of troubleshooting.
@@ -301,6 +312,10 @@ SMNRP_USE_BUYPASS=false
 ### `SMNRP_USERS`
 
 A comma separated list of `user:password` combinations to be allowed to do basic authentication on targets with the `a` flag.
+
+### `SMNRP_WHITELIST`
+
+A comma separated list of `networks` allow access to the location with the `w` flag.
 
 ```bash
 SMNRP_USERS=admin:secret,user:pass
@@ -436,7 +451,7 @@ else
 fi
 ```
 
-## Restrict access to a location
+## Restrict access to a location to users
 
 To enable basic authentication on selected locations you need to flag the location with the `a` flag and define the
 users and passwords using the `SMNRP_USERS` environment variable.
@@ -450,6 +465,16 @@ This example restricts the access to the
 
 - `/` location to the users `admin` with the password `admin` and 
 - the user `user` with the password `pass` using _Basic Authentication_.
+
+## Restrict access to a location using a network whitelist
+
+To enable network whitelisting to selected locations you need to flag the location with the `w` flag and define the
+networks using the `SMNRP_WHITELIST` environment variable.
+
+```bash
+SMNRP_LOCATIONS=/!/web_root/!t:w
+SMNRP_WHITELIST=127.0.0.1,10.0.0.0/8,172.16.0.0/12,192.168.0.0/16
+```
 
 ### Change the Authorization Required page
 
