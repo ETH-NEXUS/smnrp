@@ -19,7 +19,7 @@ do
     --real-time-html \
     --addr=0.0.0.0 \
     --port=789${i} \
-    --ws-url=wss://${domain}:443/ws/ \
+    --ws-url=wss://${domain}:443/gows/ \
     --external-assets \
     --persist \
     --db-path /web_root${vhost_path_suffix}/analytics \

@@ -234,7 +234,7 @@ EOF
 location /.well-known/acme-challenge/ {
     root /var/www/certbot;
 }
-location /ws/ {
+location /gows/ {
   proxy_pass http://localhost:789${i};
 }
 location /analytics/ {
