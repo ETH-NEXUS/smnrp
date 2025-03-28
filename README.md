@@ -150,6 +150,7 @@ The three parts are separated by a `!`.
 - **w**:  Whitelist networks to restrict access to a location and deny other traffic.
 - **r**:  Returns a _permanent redirect_ (HTTP Status Code: 301) to the `alias` or `proxy_url`. This flag can not be mixed with other flags.
 - **h**:  Sends the `$http_host` instead of `$host` as `Host` and `X-Forwarded-Host` proxy headers.
+- **i**:  Adds a `internal` clause to an alias location. This can be used to protect the file in this location from public access. Such files are only accessible by setting the `X-Accel-Redirect` header
 
 #### Example
 
@@ -225,6 +226,15 @@ location <path> {
   ...
   proxy_set_header Host $http_host;
   proxy_set_header X-Forwarded-Host $http_host;
+}
+```
+
+- for `internal`, only if flag `i` is set:
+
+```nginx
+location <path> {
+  internal;
+  alias <alias>;
 }
 ```
 

@@ -260,7 +260,6 @@ EOF
         default_root_location=0
       fi
       if [[ $target == http* ]]; then
-        # if curl --head --silent ${target} > /dev/null 2>&1; then
         potential_upstream_name=$(echo "${target}" | sed -E "s,(http(s)?:\/\/)([^/]+).*,\3,")
         if echo ${upstream_names[@]} | grep -q ${potential_upstream_name}; then
           target_to_use="${target}"
@@ -277,6 +276,9 @@ EOF
           echo '  proxy_set_header X-Forwarded-Host $http_host;' >> ${location_config}
         fi
       else
+        if [[ " ${flags[*]} " =~ " i " ]] && [[ ! " ${flags[*]} " =~ " r " ]]; then
+          echo "  internal;" >> ${location_config}
+        fi
         if [[ " ${flags[*]} " =~ " r " ]]; then
           echo "  return 301 ${target};" >> ${location_config}
         else
