@@ -160,9 +160,9 @@ SMNRP_LOCATIONS=/!/web_root/dom.org/!t:a,/api/!https://postman-echo.com/get/,/re
 
 This example
 
-- _aliases_ (nginx: `alias`) the `/` path to `/web_root/dom.org/`, 
+- _aliases_ (nginx: `alias`) the `/` path to `/web_root/dom.org/`,
 - adds a `try_files` clause as well as a `auth_basic` clause to
-the location section. 
+the location section.
 - The `/api/` path is _proxied_ (nginx: `proxy_pass`) to `https://postman-echo.com/get/`.
 
 #### Translation to nginx config
@@ -552,4 +552,12 @@ Set the `large_client_header_buffers` parameter for this server, default is `2 1
 
 ```bash
 SMNRP_LARGE_CLIENT_HEADER_BUFFERS=2 1k
+```
+
+### `SMNRP_PROXY_BUFFER_SIZE`
+
+Set the `proxy_buffer_size` parameter for this server, default is `32k`. Nginx default would be `8k`
+
+```bash
+SMNRP_PROXY_BUFFER_SIZE=32k
 ```

@@ -50,6 +50,7 @@ readarray -d '|' -t vhost_locations < <(printf '%s' "${SMNRP_LOCATIONS}")
 readarray -d '|' -t vhost_users < <(printf '%s' "${SMNRP_USERS}")
 readarray -d '|' -t vhost_whitelist < <(printf '%s' "${SMNRP_WHITELIST}")
 readarray -d '|' -t vhost_client_max_body_size < <(printf '%s' "${SMNRP_CLIENT_MAX_BODY_SIZE}")
+readarray -d '|' -t vhost_proxy_buffer_size < <(printf '%s' "${SMNRP_PROXY_BUFFER_SIZE}")
 readarray -d '|' -t vhost_own_cert < <(printf '%s' "${SMNRP_OWN_CERT}")
 readarray -d '|' -t vhost_self_signed < <(printf '%s' "${SMNRP_SELF_SIGNED}")
 readarray -d '|' -t vhost_self_signed_renew < <(printf '%s' "${SMNRP_SELF_SIGNED_RENEW}")
@@ -167,6 +168,8 @@ EOF
   proxy_read_timeout 180s;
   proxy_redirect off;
   proxy_buffering off;
+  # proxy_buffers 8 32k;
+  proxy_buffer_size ${vhost_proxy_buffer_size[i]:-32k};
 
   error_log  /var/log${vhost_path_suffix}/error.log error;
   access_log  /var/log${vhost_path_suffix}/access.log combined;
