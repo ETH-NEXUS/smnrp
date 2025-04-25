@@ -168,7 +168,7 @@ EOF
   proxy_read_timeout 180s;
   proxy_redirect off;
   proxy_buffering off;
-  # proxy_buffers 8 32k;
+  proxy_buffers 8 32k;
   proxy_buffer_size ${vhost_proxy_buffer_size[i]:-32k};
 
   error_log  /var/log${vhost_path_suffix}/error.log error;
