@@ -31,13 +31,13 @@ RUN apt-get install -y \
   build-essential \
   libmaxminddb-dev \
   libncursesw5-dev
-RUN wget https://tar.goaccess.io/goaccess-1.9.2.tar.gz && \
-  tar -xzvf goaccess-1.9.2.tar.gz && \
-  cd goaccess-1.9.2/ && \
+RUN wget https://tar.goaccess.io/goaccess-1.9.4.tar.gz && \
+  tar -xzvf goaccess-1.9.4.tar.gz && \
+  cd goaccess-1.9.4/ && \
   ./configure --enable-utf8 --enable-geoip=mmdb && \
   make && \
   make install && \
-  cd .. && rm -rf goaccess-1.9.2
+  cd .. && rm -rf goaccess-1.9.4
 
 # Install tmpmail
 RUN curl -sL "https://git.io/tmpmail" > /usr/bin/tmpmail && chmod +x /usr/bin/tmpmail
