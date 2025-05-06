@@ -11,3 +11,6 @@ services:
       - smnrp_data:/etc/letsencrypt
       - log_data:/var/log
     env_file: .env
+  echo:
+    platform: linux/amd64
+    image: kennethreitz/httpbin
