@@ -58,7 +58,7 @@ Only a single upstream (`SMNRP_UPSTREAMS`) needs to be configured. This _anonymo
 
 The locations (`SMNRP_LOCATIONS`) can be configured in a comma separated list, where the parts are separated by `!`. In this example the
 
-- `/api/` location will be _proxied_ (nginx: `proxy_pass`) to `http://targets/api/` and 
+- `/api/` location will be _proxied_ (nginx: `proxy_pass`) to `http://targets/api/` and
 - `/api/static` will be _aliased_ (nginx: `alias`) to `/usr/share/static`.
 
 ### Simple load balancing
@@ -144,13 +144,13 @@ The three parts are separated by a `!`.
 
 #### Flags
 
-- **t**:  Adds a `try_files` clause to an alias location. This must be used if the files in the target need to be served.
-- **a**:  Adds a `auth_basic` clause to the location so that only `SMNRP_USERS` have access to it. `SMNRP_USERS` must be configured in order to make this working.
-- **c**:  Sets the headers to disables the browser cache.
-- **w**:  Whitelist networks to restrict access to a location and deny other traffic.
-- **r**:  Returns a _permanent redirect_ (HTTP Status Code: 301) to the `alias` or `proxy_url`. This flag can not be mixed with other flags.
-- **h**:  Sends the `$http_host` instead of `$host` as `Host` and `X-Forwarded-Host` proxy headers.
-- **i**:  Adds a `internal` clause to an alias location. This can be used to protect the file in this location from public access. Such files are only accessible by setting the `X-Accel-Redirect` header
+- **t**: Adds a `try_files` clause to an alias location. This must be used if the files in the target need to be served.
+- **a**: Adds a `auth_basic` clause to the location so that only `SMNRP_USERS` have access to it. `SMNRP_USERS` must be configured in order to make this working.
+- **c**: Sets the headers to disables the browser cache.
+- **w**: Whitelist networks to restrict access to a location and deny other traffic.
+- **r**: Returns a _permanent redirect_ (HTTP Status Code: 301) to the `alias` or `proxy_url`. This flag can not be mixed with other flags.
+- **h**: Sends the `$http_host` instead of `$host` as `Host` and `X-Forwarded-Host` proxy headers.
+- **i**: Adds a `internal` clause to an alias location. This can be used to protect the file in this location from public access. Such files are only accessible by setting the `X-Accel-Redirect` header
 
 #### Example
 
@@ -162,7 +162,7 @@ This example
 
 - _aliases_ (nginx: `alias`) the `/` path to `/web_root/dom.org/`,
 - adds a `try_files` clause as well as a `auth_basic` clause to
-the location section.
+  the location section.
 - The `/api/` path is _proxied_ (nginx: `proxy_pass`) to `https://postman-echo.com/get/`.
 
 #### Translation to nginx config
@@ -237,6 +237,26 @@ location <path> {
   alias <alias>;
 }
 ```
+
+### `SMNRP_LOCATION_CONFIGS`
+
+You can define additional nginx config lines per location.
+
+```bash
+SMNRP_LOCATION_CONFIGS=/api/!proxy_set_header X-Forwarded-Port 443;proxy_set_header X-Forwarded-Host Host
+```
+
+This example adds two custom config lines to the location block `location /api/`:
+
+```nginx
+location /api/ {
+  proxy_set_header X-Forwarded-Port 443;
+  proxy_set_header X-Forwarded-Host Host;
+}
+```
+
+- split the lines with `;`
+- reference the location using the **same** location url as in the `SMNRP_LOCATIONS` variable
 
 ### `SMNRP_REQUEST_ON_BOOT`
 
@@ -343,8 +363,7 @@ A vhost configuration may contain all configuration entries as a configuration w
 services:
   ws:
     image: ethnexus/smnrp
-    volumes: 
-      ...
+    volumes: ...
       - ./custom/configs:/etc/nginx/conf.d/custom
 ```
 
@@ -360,7 +379,7 @@ volumes:
 services:
   ws:
     image: ethnexus/smnrp
-    volumes: 
+    volumes:
       - web_root:/web_root
       - smnrp_data:/etc/letsencrypt
       - log_data:/var/log
@@ -383,16 +402,16 @@ services:
 
 Your web application files need to be generated into the docker volume `web_root` that needs to be mapped to `/web_root`. In case of vhosts it should be bind mounted to `/web_root/<vhost>`
 
-Essential is the `smnrp_data` volume. It should **always** bind mounted to `/etc/letsencrypt`, otherwise SMNRP may create too many requests to Let's Encrypt and gets blocked for about 24h to request certificates. 
+Essential is the `smnrp_data` volume. It should **always** bind mounted to `/etc/letsencrypt`, otherwise SMNRP may create too many requests to Let's Encrypt and gets blocked for about 24h to request certificates.
 If you are using a local directory to bind mount `/etc/letsencrypt` (i.e. `./ssl:/etc/letsencrypt`) you must create the `ssl-dhparams.pem` in the root of this directory (i.e. `./ssl`) by using:
 
 ```bash
-openssl dhparam -out ssl-dhparams.pem 4096 
+openssl dhparam -out ssl-dhparams.pem 4096
 ```
 
 ### Integration into `docker-compose` while chaining `SMNRP` instances
 
-In case you want to chaing `SMNRP` instances on the same host you need to configure the 
+In case you want to chaing `SMNRP` instances on the same host you need to configure the
 
 - `network_mode` to `host` and
 - omit the `ports` configuration.
@@ -404,7 +423,7 @@ volumes:
 services:
   ws:
     image: ethnexus/smnrp
-    volumes: 
+    volumes:
       - smnrp_data:/etc/letsencrypt
       - log_data:/var/log
     env_file: .env
@@ -421,9 +440,9 @@ To enable the maintenance mode you need to touch the file `.maintenance` into th
 To add a custom maintenance page you need to overwrite the file `/usr/share/nginx/html/error/maintenance.html`.
 
 ```yaml
-...
-  volumes:
-    - ./my-maintenance.html:/usr/share/nginx/html/error/maintenance.html
+---
+volumes:
+  - ./my-maintenance.html:/usr/share/nginx/html/error/maintenance.html
 ```
 
 ### Script to enable, disable the maintenance mode
@@ -457,7 +476,7 @@ SMNRP_USERS=admin:admin,user:pass
 
 This example restricts the access to the
 
-- `/` location to the users `admin` with the password `admin` and 
+- `/` location to the users `admin` with the password `admin` and
 - the user `user` with the password `pass` using _Basic Authentication_.
 
 ## Restrict access to a location using a network whitelist
@@ -475,9 +494,9 @@ SMNRP_WHITELIST=127.0.0.1,10.0.0.0/8,172.16.0.0/12,192.168.0.0/16
 To add a custom _Authorization Required_ page you need to overwrite the file `/usr/share/nginx/html/error/auth_required.html`.
 
 ```yaml
-...
-  volumes:
-    - ./my-auth_required.html:/usr/share/nginx/html/error/auth_required.html
+---
+volumes:
+  - ./my-auth_required.html:/usr/share/nginx/html/error/auth_required.html
 ```
 
 ## Detect and handle certificate renewals on host

@@ -61,6 +61,7 @@ readarray -d '|' -t vhost_client_body_buffer_size < <(printf '%s' "${SMNRP_CLIEN
 readarray -d '|' -t vhost_large_client_header_buffers < <(printf '%s' "${SMNRP_LARGE_CLIENT_HEADER_BUFFERS}")
 readarray -d '|' -t vhost_disable_https < <(printf '%s' "${SMNRP_DISABLE_HTTPS}")
 readarray -d '|' -t vhost_use_bypass < <(printf '%s' "${SMNRP_USE_BUYPASS}")
+readarray -d '|' -t vhost_location_configs < <(printf '%s' "${SMNRP_LOCATION_CONFIGS}")
 
 if [ ${#vhosts[@]} -gt 1 ]; then
   VHOSTS=1
@@ -150,24 +151,9 @@ EOF
   add_header Cache-Control no-cache="Set-Cookie";
   include /etc/nginx/conf.d${vhost_path_suffix}/csp.nginx;
 
-  proxy_set_header Host \$host;
-  proxy_set_header X-Real-IP \$remote_addr;
-  proxy_set_header X-Scheme \$scheme;
-  proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
-  proxy_set_header X-Forwarded-Proto \$scheme;
-  proxy_set_header X-Forwarded-Ssl on;
-  # according to https://www.freecodecamp.org/news/docker-nginx-letsencrypt-easy-secure-reverse-proxy-40165ba3aee2/
-  proxy_set_header X-Forwarded-Host \$host;
-  proxy_set_header X-Forwarded-Port \$server_port;
-  # websocket headers
-  proxy_http_version 1.1;
-  proxy_set_header Upgrade \$http_upgrade;
-  proxy_set_header Connection \$connection_upgrade;
-  proxy_cache_bypass \$http_upgrade;
+  include /etc/nginx/conf.d/proxy_defaults.nginx;
 
   proxy_read_timeout 180s;
-  proxy_redirect off;
-  proxy_buffering off;
   proxy_buffers 8 32k;
   proxy_buffer_size ${vhost_proxy_buffer_size[i]:-32k};
 
@@ -193,7 +179,7 @@ EOF
   ###
   # Upstreams
   ###
-  declare -A upstream_names=()
+  upstream_names=()
   if [ ! -z ${vhost_upstreams[i]} ]; then
     readarray -d , -t upstreams < <(printf '%s' "${vhost_upstreams[i]}")
     declare -A targets=()
@@ -223,6 +209,22 @@ EOF
     done
   else
     touch ${upstream_config}
+  fi
+
+  ###
+  # Location configs
+  ###
+  declare -A location_configs=()
+  if [ ! -z "${vhost_location_configs[i]}" ]; then
+    IFS=',' read -ra configs <<< "${vhost_location_configs[i]}"
+    for config in "${configs[@]}"
+    do
+      if grep -q "!" <<< "${config}"; then
+        IFS='!' read -r key value <<< "${config}"
+        location_configs[${key}]="${value}"
+        echo "### Location config for ${key}: ${location_configs[${key}]}"
+      fi
+    done
   fi
 
   ###
@@ -265,19 +267,22 @@ EOF
       if [[ $target == http* ]]; then
         potential_upstream_name=$(echo "${target}" | sed -E "s,(http(s)?:\/\/)([^/]+).*,\3,")
         if echo ${upstream_names[@]} | grep -q ${potential_upstream_name}; then
-          target_to_use="${target}"
-        else
           target_to_use=$(echo "${target}" | sed -E "s,(http(s)?:\/\/)(.*),\1${vhost_upstream_prefix}\3,")
+        else
+          target_to_use="${target}"
         fi
         if [[ " ${flags[*]} " =~ " r " ]]; then
           echo "  return 301 ${target};" >> ${location_config}
         else
           echo "  proxy_pass ${target_to_use};" >> ${location_config}
         fi
+        ### DEPRECATED
         if [[ " ${flags[*]} " =~ " h " ]] && [[ ! " ${flags[*]} " =~ " r " ]]; then
+          echo '  include /etc/nginx/conf.d/proxy_defaults.nginx;' >> ${location_config}
           echo '  proxy_set_header Host $http_host;' >> ${location_config}
           echo '  proxy_set_header X-Forwarded-Host $http_host;' >> ${location_config}
         fi
+        ###
       else
         if [[ " ${flags[*]} " =~ " i " ]] && [[ ! " ${flags[*]} " =~ " r " ]]; then
           echo "  internal;" >> ${location_config}
@@ -312,6 +317,15 @@ EOF
           done
           echo '  deny all;' >> ${location_config}
         fi
+      fi
+      if [[ -v location_configs[${uri}] ]]; then
+        # Add the default proxy headers, because they are not inherited
+        echo '  include /etc/nginx/conf.d/proxy_defaults.nginx;' >> ${location_config}
+        IFS=';' read -ra lines <<< "${location_configs[${uri}]}"
+        for line in "${lines[@]}"
+        do
+          echo "  ${line};" >> ${location_config}
+        done
       fi
       echo "}" >> ${location_config}
     done
