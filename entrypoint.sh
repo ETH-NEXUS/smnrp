@@ -151,8 +151,6 @@ EOF
   add_header Cache-Control no-cache="Set-Cookie";
   include /etc/nginx/conf.d${vhost_path_suffix}/csp.nginx;
 
-  include /etc/nginx/conf.d/proxy_defaults.nginx;
-
   proxy_read_timeout 180s;
   proxy_buffers 8 32k;
   proxy_buffer_size ${vhost_proxy_buffer_size[i]:-32k};
@@ -241,6 +239,7 @@ location /.well-known/acme-challenge/ {
     root /var/www/certbot;
 }
 location /gows/ {
+  include /etc/nginx/conf.d/proxy_defaults.nginx;
   proxy_pass http://localhost:789${i};
 }
 location /analytics/ {
@@ -274,11 +273,17 @@ EOF
         if [[ " ${flags[*]} " =~ " r " ]]; then
           echo "  return 301 ${target};" >> ${location_config}
         else
+          if [[ ! " ${flags[*]} " =~ " n " ]]; then
+            # Add the smnrp default proxy headers
+            echo '  include /etc/nginx/conf.d/proxy_defaults.nginx;' >> ${location_config}
+          else
+            # we need to set at least the Host otherwise it's awkward
+            echo '  proxy_set_header Host $host;' >> ${location_config}
+          fi
           echo "  proxy_pass ${target_to_use};" >> ${location_config}
         fi
         ### DEPRECATED
         if [[ " ${flags[*]} " =~ " h " ]] && [[ ! " ${flags[*]} " =~ " r " ]]; then
-          echo '  include /etc/nginx/conf.d/proxy_defaults.nginx;' >> ${location_config}
           echo '  proxy_set_header Host $http_host;' >> ${location_config}
           echo '  proxy_set_header X-Forwarded-Host $http_host;' >> ${location_config}
         fi
@@ -319,8 +324,6 @@ EOF
         fi
       fi
       if [[ -v location_configs[${uri}] ]]; then
-        # Add the default proxy headers, because they are not inherited
-        echo '  include /etc/nginx/conf.d/proxy_defaults.nginx;' >> ${location_config}
         IFS=';' read -ra lines <<< "${location_configs[${uri}]}"
         for line in "${lines[@]}"
         do
@@ -341,6 +344,15 @@ EOF
       cat >> ${location_config} << EOF
 location / {
   proxy_next_upstream error timeout http_503;
+EOF
+      if [[ ! " ${flags[*]} " =~ " n " ]]; then
+        # Add the smnrp default proxy headers
+        echo '  include /etc/nginx/conf.d/proxy_defaults.nginx;' >> ${location_config}
+      else
+        # we need to set at least the Host otherwise it's awkward
+        echo '  proxy_set_header Host $host;' >> ${location_config}
+      fi
+      cat >> ${location_config} << EOF
   proxy_pass https://${vhost_upstream_prefix}targets;
 }
 EOF

@@ -149,8 +149,9 @@ The three parts are separated by a `!`.
 - **c**: Sets the headers to disables the browser cache.
 - **w**: Whitelist networks to restrict access to a location and deny other traffic.
 - **r**: Returns a _permanent redirect_ (HTTP Status Code: 301) to the `alias` or `proxy_url`. This flag can not be mixed with other flags.
-- **h**: Sends the `$http_host` instead of `$host` as `Host` and `X-Forwarded-Host` proxy headers.
+- **h**: [DEPRECATED: replace with the flag `n` in combination with `SMNRP_LOCATION_CONFIGS`] Sends the `$http_host` instead of `$host` as `Host` and `X-Forwarded-Host` proxy headers.
 - **i**: Adds a `internal` clause to an alias location. This can be used to protect the file in this location from public access. Such files are only accessible by setting the `X-Accel-Redirect` header
+- **n**: Do NOT add smnrp default proxy settings to the location.
 
 #### Example
 
@@ -243,20 +244,24 @@ location <path> {
 You can define additional nginx config lines per location.
 
 ```bash
-SMNRP_LOCATION_CONFIGS=/api/!proxy_set_header X-Forwarded-Port 443;proxy_set_header X-Forwarded-Host Host
+SMNRP_LOCATION_CONFIGS=/api/!proxy_set_header Host $$http_host;proxy_set_header X-Forwarded-Host $$http_host
 ```
 
 This example adds two custom config lines to the location block `location /api/`:
 
 ```nginx
 location /api/ {
-  proxy_set_header X-Forwarded-Port 443;
-  proxy_set_header X-Forwarded-Host Host;
+  proxy_set_header Host $http_host
+  proxy_set_header X-Forwarded-Host $http_host
 }
 ```
 
 - split the lines with `;`
 - reference the location using the **same** location url as in the `SMNRP_LOCATIONS` variable
+- escape all `$` with `$$`
+
+> Hint: Please be aware that the SMNRP default proxy config is included in the location BEFORE the custom configs.
+> You can avoid this by adding the `n` flag to the location. Often `n` is used in combination with `SMNRP_LOCATIONS`.
 
 ### `SMNRP_REQUEST_ON_BOOT`
 
