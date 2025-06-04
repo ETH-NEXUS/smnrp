@@ -10,6 +10,9 @@ proxy_set_header X-Forwarded-Ssl on;
 # according to https://www.freecodecamp.org/news/docker-nginx-letsencrypt-easy-secure-reverse-proxy-40165ba3aee2/
 proxy_set_header X-Forwarded-Host $host;
 proxy_set_header X-Forwarded-Port $server_port;
+# CSRF relevant config
+proxy_set_header Cookie $http_cookie;
+proxy_pass_request_headers on;
 # websocket headers
 proxy_http_version 1.1;
 proxy_set_header Upgrade $http_upgrade;
