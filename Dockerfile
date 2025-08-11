@@ -1,5 +1,8 @@
 FROM nginx:1.27.5
 
+# All following commands are done as root
+USER root
+
 # Define a volume for /etc/letsencrypt
 # to make sure the requested certificates
 # are persistent
@@ -85,4 +88,26 @@ RUN chmod 755 /entrypoint.sh /analyser.sh /reloader.sh /renewer.sh /smnrp_reset
 # Copy over the geoip databases
 COPY ./db /db
 
+# Create an smnrp user and group
+RUN groupadd --gid 1000 smnrp \
+  && useradd --uid 1000 --gid 1000 -m smnrp
+
+# let the smnrp user own the needed files and dirs
+RUN chown -R smnrp:smnrp \
+  /entrypoint.sh \
+  /analyser.sh \
+  /reloader.sh \
+  /renewer.sh \
+  /smnrp_reset \
+  /etc/nginx/conf.d \
+  /var/cache/nginx \
+  /etc/letsencrypt \
+  /web_root \
+  /var/log \
+  /run
+
+# Execute as user smnrp
+USER smnrp
+
+# Start the entrypoint
 ENTRYPOINT [ "/entrypoint.sh" ]
