@@ -7,3 +7,4 @@
 *.f
 
 .DS_Store
+manifest.yaml
