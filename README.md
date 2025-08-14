@@ -4,6 +4,12 @@ The _Secure Multifuctional Nginx Reverse Proxy (SMNRP)_ is a reverse proxy based
 
 ![SMNRP](https://raw.githubusercontent.com/ETH-NEXUS/smnrp/main/img/SMNRP.png)
 
+## Migration
+
+If you migrate from version 2.x.y to version 3.x.y you **need to make sure** to remove all existing volumes and bind mounts before launching `SMNRP`
+version 3.x.y, because from version 3.x.y on the services are running with the user `smnrp` (uid: 1000). If you don't reinitialize the volumes 
+you will get some `permission denied` messages and `SMNRP` will not work as expected.
+
 ## Features
 
 ### HTTPS Certificates
