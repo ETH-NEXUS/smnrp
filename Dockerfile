@@ -1,4 +1,4 @@
-FROM nginx:1.27.5
+FROM nginx:1.29.1
 
 # All following commands are done as root
 USER root
@@ -77,6 +77,9 @@ COPY ./nginx/errorpages/* /usr/share/nginx/html/error/.
 # Preparation for analytics
 RUN mkdir -p /var/log/analytics
 
+# Add additional required folders
+RUN mkdir -p /var/lib/letsencrypt
+
 # Copy the entrypoint
 COPY ./entrypoint.sh /entrypoint.sh
 COPY ./analyser.sh /analyser.sh
@@ -101,6 +104,7 @@ RUN chown -R smnrp:smnrp \
   /smnrp_reset \
   /etc/nginx/conf.d \
   /var/cache/nginx \
+  /var/lib/letsencrypt \
   /etc/letsencrypt \
   /web_root \
   /var/log \

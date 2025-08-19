@@ -7,7 +7,7 @@ The _Secure Multifuctional Nginx Reverse Proxy (SMNRP)_ is a reverse proxy based
 ## Migration
 
 If you migrate from version 2.x.y to version 3.x.y you **need to make sure** to remove all existing volumes and bind mounts before launching `SMNRP`
-version 3.x.y, because from version 3.x.y on the services are running with the user `smnrp` (uid: 1000). If you don't reinitialize the volumes 
+version 3.x.y, because from version 3.x.y on the services are running with the user `smnrp` (uid: 1000). If you don't reinitialize the volumes
 you will get some `permission denied` messages and `SMNRP` will not work as expected.
 
 ## Features
@@ -365,6 +365,22 @@ SMNRP_USERS=admin:secret,user1:xzy|user2:pass
 The configuration will take the order into account. First section is **vhost1**, the second is **vhost2** and so on. If you add vhost support for one config variable you **must add it for every other config variable** as well except for `SMNRP_ENABLE_ANALYTICS` which is a global setting.
 
 A vhost configuration may contain all configuration entries as a configuration without vhost support. The configuration that will be taken into account is selected by the url that is accessing SMNRP (default vhost behavior).
+
+## Configure the listening ports
+
+To configure on which ports the nginx is listening on internally you can use the following environment variables:
+
+```bash
+SMNRP_HTTP_PORT=80
+SMNRP_HTTPS_PORT=443
+SMNRP_HTTPS_REDIRECT_PORT=
+```
+
+With the `SMNRP_HTTP_PORT` you can configure the **http server port** of nginx.
+With the `SMNRP_HTTPS_PORT` you can configure the **ssl server port** nginx is listening on.
+
+As `SMNRP` by default redirects to https in case http is requested you have the ability to define a `SMNRP_HTTPS_REDIRECT_PORT` to be added to
+the redirect url. This is only necessary if you don't expose the `SMNRP_HTTPS_PORT` to the default port (443).
 
 ## Apply custom configurations
 
