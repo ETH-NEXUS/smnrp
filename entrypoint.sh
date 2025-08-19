@@ -63,6 +63,9 @@ readarray -d '|' -t vhost_disable_https < <(printf '%s' "${SMNRP_DISABLE_HTTPS}"
 readarray -d '|' -t vhost_use_bypass < <(printf '%s' "${SMNRP_USE_BUYPASS}")
 readarray -d '|' -t vhost_location_configs < <(printf '%s' "${SMNRP_LOCATION_CONFIGS}")
 readarray -d '|' -t vhost_tls13_only < <(printf '%s' "${SMNRP_TLS13_ONLY}")
+readarray -d '|' -t vhost_http_port < <(printf '%s' "${SMNRP_HTTP_PORT}")
+readarray -d '|' -t vhost_https_port < <(printf '%s' "${SMNRP_HTTPS_PORT}")
+readarray -d '|' -t vhost_https_redirect_port < <(printf '%s' "${SMNRP_HTTPS_REDIRECT_PORT}")
 
 if [ ${#vhosts[@]} -gt 1 ]; then
   VHOSTS=1
@@ -75,6 +78,8 @@ fi
 # because they are globally managed
 upstream_config="/etc/nginx/conf.d/upstreams.nginx"
 rm -f ${upstream_config}
+certbot_config="/etc/nginx/conf.d/certbot.conf"
+rm -f ${certbot_config}
 
 for i in "${!vhosts[@]}"
 do
@@ -101,20 +106,41 @@ do
     fi
     listen_suffix=" default_server"
   fi
-  echo "### Domain: ${domain}"
+  echo "### Domain: ${domain} on ports ${vhost_http_port[i]:-80} / ${vhost_https_port[i]:-443}"
+  if [[ "${vhost_https_redirect_port[i]}" != "" ]]; then
+    echo "### Domain: ${domain} has an https redirect port: ${vhost_https_redirect_port[i]}"
+  fi
   if [[ "${vhost_disable_https[i]}" == 'true' ]]; then
     cat >> ${default_config} << EOF
 server {
-  listen 80${listen_suffix};
-  # listen [::]:80 http2${listen_suffix};
+  listen ${vhost_http_port[i]:-80}${listen_suffix};
+  # listen [::]:${vhost_http_port[i]:-80} http2${listen_suffix};
   http2 on;
   server_name ${domains[@]};
 EOF
   else
+    # We write the certbot.conf here:
+    cat >> ${certbot_config} << EOF
+server {
+  listen ${vhost_http_port[i]:-80}${listen_suffix};
+  # listen [::]:${vhost_http_port[i]:-80}${listen_suffix};
+  server_name ${domains[@]};
+
+  # on http port we only allow certbot requests
+  location /.well-known/acme-challenge/ {
+    root /var/www/certbot;
+  }
+
+  # everthing else is redirected to a https connection
+  location / {
+    return 301 https://\$host${vhost_https_redirect_port[i]:+:${vhost_https_redirect_port[i]}}\$request_uri;
+  }
+}
+EOF
     cat >> ${default_config} << EOF
 server {
-  listen 443 ssl${listen_suffix};
-  # listen [::]:443 ssl http2${listen_suffix};
+  listen ${vhost_https_port[i]:-443} ssl${listen_suffix};
+  # listen [::]:${vhost_https_port[i]:-443} ssl http2${listen_suffix};
   http2 on;
   server_name ${domains[@]};
 
@@ -469,7 +495,7 @@ do
     echo "### HTTPS is disabled for ${vhost}, let's skip generating certificates ..."
     # Remove the default certbot config that is listening on port 80
     # otherwise we have a conflicting configuration
-    rm -f /etc/nginx/conf.d/certbot.conf
+    rm -f ${certbot_config}
     continue
   fi
   if [ "${vhost_own_cert[i]}" == "true" ]; then
