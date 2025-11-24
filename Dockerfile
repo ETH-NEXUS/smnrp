@@ -1,4 +1,4 @@
-FROM nginx:1.27.5
+FROM nginx:1.29.3
 
 # All following commands are done as root
 USER root
