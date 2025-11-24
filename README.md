@@ -350,6 +350,10 @@ SMNRP_USERS=admin:secret,user:pass
 
 If set to `true`, SMNRP is generating an analytics dashboard page based on [goaccess](https://goaccess.io/) at `analytics/dashboard.html`, default is `false`.
 
+### `SMNRP_TLS13_ONLY`
+
+If set to `true` SMNRP only accepts TLSv1.3.
+
 ## Virtual host configuration
 
 To enable virtual hosts you need to use the `|` separator in the config variables:

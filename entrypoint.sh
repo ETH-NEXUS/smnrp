@@ -62,6 +62,7 @@ readarray -d '|' -t vhost_large_client_header_buffers < <(printf '%s' "${SMNRP_L
 readarray -d '|' -t vhost_disable_https < <(printf '%s' "${SMNRP_DISABLE_HTTPS}")
 readarray -d '|' -t vhost_use_bypass < <(printf '%s' "${SMNRP_USE_BUYPASS}")
 readarray -d '|' -t vhost_location_configs < <(printf '%s' "${SMNRP_LOCATION_CONFIGS}")
+readarray -d '|' -t vhost_tls13_only < <(printf '%s' "${SMNRP_TLS13_ONLY}")
 
 if [ ${#vhosts[@]} -gt 1 ]; then
   VHOSTS=1
@@ -124,12 +125,26 @@ server {
   # include /etc/letsencrypt/options-ssl-nginx.conf;
   ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem;
 
-  ssl_prefer_server_ciphers on;
+EOF
+
+    # choose protocols based on SMNRP_TLS13_ONLY for this vhost
+    if [[ "${vhost_tls13_only[i]}" == 'true' ]]; then
+      cat >> ${default_config} << EOF
+  ssl_protocols TLSv1.3;
+  ssl_ecdh_curve X25519:prime256v1:secp384r1;
+  ssl_prefer_server_ciphers off;
+EOF
+    else
+      cat >> ${default_config} << EOF
   ssl_protocols TLSv1.2 TLSv1.3;
-  # proposal from https://raymii.org/s/tutorials/Strong_SSL_Security_On_nginx.html
-  ssl_ciphers ECDHE-RSA-AES256-GCM-SHA512:DHE-RSA-AES256-GCM-SHA512:ECDHE-RSA-AES256-GCM-SHA384:DHE-RSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-SHA384;
-  # for backward compatibility we could use:
-  # ssl_ciphers "EECDH+AESGCM:EDH+AESGCM:ECDHE-RSA-AES128-GCM-SHA256:AES256+EECDH:DHE-RSA-AES128-GCM-SHA256:AES256+EDH:ECDHE-RSA-AES256-GCM-SHA384:DHE-RSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-SHA384:ECDHE-RSA-AES128-SHA256:ECDHE-RSA-AES256-SHA:ECDHE-RSA-AES128-SHA:DHE-RSA-AES256-SHA256:DHE-RSA-AES128-SHA256:DHE-RSA-AES256-SHA:DHE-RSA-AES128-SHA:ECDHE-RSA-DES-CBC3-SHA:EDH-RSA-DES-CBC3-SHA:AES256-GCM-SHA384:AES128-GCM-SHA256:AES256-SHA256:AES128-SHA256:AES256-SHA:AES128-SHA:DES-CBC3-SHA:HIGH:!aNULL:!eNULL:!EXPORT:!DES:!MD5:!PSK:!RC4";
+    ssl_ecdh_curve X25519:prime256v1:secp384r1;
+    ssl_ciphers ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:DHE-RSA-AES128-GCM-SHA256:DHE-RSA-AES256-GCM-SHA384:DHE-RSA-CHACHA20-POLY1305;
+    ssl_prefer_server_ciphers off;
+EOF
+    fi
+    # rest of the TLS settings
+    cat >> ${default_config} << EOF
+  
   ssl_session_cache shared:le_nginx_SSL:10m;
   ssl_session_timeout 1440m;
   ssl_session_tickets off;
