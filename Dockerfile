@@ -104,6 +104,7 @@ RUN chown -R smnrp:smnrp \
   /etc/letsencrypt \
   /web_root \
   /var/log \
+  /var/www \
   /run
 
 # Execute as user smnrp
