@@ -530,6 +530,7 @@ EOF
     else
       if [[ "${domain_config_changed}" -eq 1 ]] || [[ "${vhost_request_on_boot[i]}" == 'true' ]] || [[ ! -e /etc/letsencrypt/live/${domain}/fullchain.pem ]]; then
         rsa_key_size=4096
+        mkdir /var/www/certbot
         if [[ "${vhost_use_bypass[i]}" == 'true' ]]; then
           if [ ! -d /etc/letsencrypt/accounts/api.buypass.com ]; then
             email=$(tmpmail -g)
