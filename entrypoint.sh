@@ -187,7 +187,6 @@ EOF
   add_header Referrer-Policy strict-origin-when-cross-origin;
   
   add_header X-Frame-Options "SAMEORIGIN";
-  add_header X-XSS-Protection "1; mode=block";
   add_header X-Content-Type-Options nosniff;
   add_header Cache-Control no-cache="Set-Cookie";
   include /etc/nginx/conf.d${vhost_path_suffix}/csp.nginx;
