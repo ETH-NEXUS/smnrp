@@ -105,11 +105,11 @@ RUN chown -R smnrp:smnrp \
   /etc/nginx/conf.d \
   /var/cache/nginx \
   /var/lib/letsencrypt \
+  /var/www \
   /etc/letsencrypt \
   /web_root \
   /var/log \
-  /run \
-  /var/www/certbot
+  /run
 
 # Execute as user smnrp
 USER smnrp
