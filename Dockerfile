@@ -108,7 +108,8 @@ RUN chown -R smnrp:smnrp \
   /etc/letsencrypt \
   /web_root \
   /var/log \
-  /run
+  /run \
+  /var/www/certbot
 
 # Execute as user smnrp
 USER smnrp
