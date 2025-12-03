@@ -1,6 +1,7 @@
 volumes:
   smnrp_data:
   log_data:
+  auth_data:
 services:
   ws:
     build: .
@@ -14,3 +15,21 @@ services:
   echo:
     platform: linux/amd64
     image: kennethreitz/httpbin
+  auth:
+    build:
+      context: auth
+    hostname: auth
+    restart: "unless-stopped"
+    volumes:
+      #   - auth_config:/config
+      - auth_data:/data
+    environment:
+      TZ: "Europe/Zurich"
+    depends_on:
+      - mail
+  mail:
+    image: axllent/mailpit:v1.27.5
+    hostname: mail
+    restart: unless-stopped
+    ports:
+      - 8025:8025

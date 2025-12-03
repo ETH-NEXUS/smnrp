@@ -79,6 +79,7 @@ RUN mkdir -p /var/log/analytics
 
 # Add additional required folders
 RUN mkdir -p /var/lib/letsencrypt
+RUN mkdir -p /var/log/nginx
 
 # Copy the entrypoint
 COPY ./entrypoint.sh /entrypoint.sh

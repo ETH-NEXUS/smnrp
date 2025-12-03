@@ -66,6 +66,8 @@ readarray -d '|' -t vhost_tls13_only < <(printf '%s' "${SMNRP_TLS13_ONLY}")
 readarray -d '|' -t vhost_http_port < <(printf '%s' "${SMNRP_HTTP_PORT}")
 readarray -d '|' -t vhost_https_port < <(printf '%s' "${SMNRP_HTTPS_PORT}")
 readarray -d '|' -t vhost_https_redirect_port < <(printf '%s' "${SMNRP_HTTPS_REDIRECT_PORT}")
+readarray -d '|' -t vhost_enable_auth < <(printf '%s' "${SMNRP_ENABLE_AUTH}")
+
 
 if [ ${#vhosts[@]} -gt 1 ]; then
   VHOSTS=1
@@ -287,6 +289,84 @@ location /analytics/ {
   index dashboard.html;
 }
 EOF
+  if [[ $domain == auth* ]]; then
+    cat >> ${location_config} << EOF
+location = /api/verify {
+  internal;
+  proxy_pass_request_body off;
+  proxy_set_header Content-Length "";
+  proxy_set_header X-Original-URL \$scheme://\$http_host\$request_uri;
+  proxy_set_header X-Real-IP \$remote_addr;
+  proxy_set_header Host \$host;
+  proxy_pass http://auth:9091;
+}
+location /api/ {
+  ## Headers
+  proxy_set_header Host \$host;
+  proxy_set_header X-Original-URL \$scheme://\$http_host\$request_uri;
+  proxy_set_header X-Forwarded-Proto \$scheme;
+  proxy_set_header X-Forwarded-Host \$http_host;
+  proxy_set_header X-Forwarded-URI \$request_uri;
+  proxy_set_header X-Forwarded-Ssl on;
+  proxy_set_header X-Forwarded-For \$remote_addr;
+  proxy_set_header X-Real-IP \$remote_addr;
+
+  ## Basic Proxy Configuration
+  client_body_buffer_size 128k;
+  proxy_next_upstream error timeout invalid_header http_500 http_502 http_503; ## Timeout if the real server is dead.
+  proxy_redirect  http://  \$scheme://;
+  proxy_http_version 1.1;
+  proxy_cache_bypass \$cookie_session;
+  proxy_no_cache \$cookie_session;
+  proxy_buffers 64 256k;
+
+  ## Trusted Proxies Configuration
+  ## Please read the following documentation before configuring this:
+  ##     https://www.authelia.com/integration/proxies/nginx/#trusted-proxies
+  # set_real_ip_from 10.0.0.0/8;
+  # set_real_ip_from 172.16.0.0/12;
+  # set_real_ip_from 192.168.0.0/16;
+  # set_real_ip_from fc00::/7;
+  real_ip_header X-Forwarded-For;
+  real_ip_recursive on;
+
+  ## Advanced Proxy Configuration
+  send_timeout 5m;
+  proxy_read_timeout 360;
+  proxy_send_timeout 360;
+  proxy_connect_timeout 360;
+  proxy_pass http://auth:9091;
+}
+EOF
+  fi
+  if [[ ${vhost_enable_auth[i]} == 'true' ]]; then
+    cat >> ${location_config} << EOF
+location /internal/authelia/authz {
+    internal;
+    proxy_pass http://auth:9091/api/authz/auth-request;
+
+    proxy_set_header X-Original-Method \$request_method;
+    proxy_set_header X-Original-URL \$scheme://\$http_host$request_uri;
+    proxy_set_header X-Forwarded-For \$remote_addr;
+    proxy_set_header Content-Length "";
+    proxy_set_header Connection "";
+
+    proxy_pass_request_body off;
+    proxy_next_upstream error timeout invalid_header http_500 http_502 http_503; # Timeout if the real server is dead
+    proxy_redirect http:// \$scheme://;
+    proxy_http_version 1.1;
+    proxy_cache_bypass \$cookie_session;
+    proxy_no_cache \$cookie_session;
+    proxy_buffers 4 32k;
+    client_body_buffer_size 128k;
+
+    send_timeout 5m;
+    proxy_read_timeout 240;
+    proxy_send_timeout 240;
+    proxy_connect_timeout 240;
+}
+EOF
+  fi
   if [ ! -z ${vhost_locations[i]} ]; then
     for location in ${locations[@]}
     do
@@ -302,6 +382,9 @@ EOF
       if [[ "$uri" == "/" ]]; then
         echo "### Skipping default / target because it's configured as a location to ${target}."
         default_root_location=0
+      fi
+      if [[ " ${flags[*]} " =~ " p " ]]; then
+        echo '  include /etc/nginx/conf.d/auth.nginx;' >> ${location_config}
       fi
       if [[ $target == http* ]]; then
         potential_upstream_name=$(echo "${target}" | sed -E "s,(http(s)?:\/\/)([^/]+).*,\3,")
