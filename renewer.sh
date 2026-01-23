@@ -8,6 +8,19 @@ readarray -d '|' -t vhosts < <(printf '%s' "${SMNRP_DOMAINS}")
 readarray -d '|' -t vhost_own_cert < <(printf '%s' "${SMNRP_OWN_CERT}")
 readarray -d '|' -t vhost_self_signed < <(printf '%s' "${SMNRP_SELF_SIGNED}")
 readarray -d '|' -t vhost_disable_https < <(printf '%s' "${SMNRP_DISABLE_HTTPS}")
+
+echo "### Waiting for nginx to be up ..."
+while true
+do
+  if [ -e /var/run/nginx.pid ]; then
+    pid=$(cat /var/run/nginx.pid)
+    if kill -0 $pid 2>/dev/null; then
+      break
+    fi
+  fi
+  sleep 1
+done
+
 while true
 do
   renew=0
@@ -21,7 +34,6 @@ do
   done
   if [ $renew -eq 1 ]; then
     if [ ! -e ${ts_file} ]; then
-      echo "$(date +%s)" > ${ts_file}
       last=0
     else
       last=$(cat ${ts_file})
@@ -32,7 +44,11 @@ do
     if [ $diff -gt $timeout ]; then
       echo "Trying to renew certificate..."
       certbot renew
-      echo "$(date +%s)" > ${ts_file}
+      if [ $? -eq 0 ]; then
+        echo "$(date +%s)" > ${ts_file}
+      else
+        echo "### Certificate renewal failed, will retry later."
+      fi
     else
       pp_min=$(( ($timeout - $diff) / 60 ))
       pp_h=$(( ($timeout - $diff) / 60 / 60 ))

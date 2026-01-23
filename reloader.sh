@@ -3,6 +3,18 @@
 # This directories must me there to watch the files inside
 mkdir -p /etc/letsencrypt/live /etc/nginx/conf.d
 
+echo "### Waiting for nginx to be up ..."
+while true
+do
+  if [ -e /var/run/nginx.pid ]; then
+    pid=$(cat /var/run/nginx.pid)
+    if kill -0 $pid 2>/dev/null; then
+      break
+    fi
+  fi
+  sleep 1
+done
+
 while true
 do
   info=$(inotifywait -r --exclude .swp -e create -e modify -e delete -e move /etc/letsencrypt/live)
