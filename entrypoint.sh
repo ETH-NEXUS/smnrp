@@ -561,7 +561,6 @@ fi
 echo "### Waiting for nginx to start ..."
 wait -n
 
-
 for i in "${!vhosts[@]}"
 do
   vhost=${vhosts[i]}
@@ -673,13 +672,24 @@ EOF
   fi
 done # vhost done
 
+# Stop temporary nginx before starting it as PID1 (daemon off) at the end.
+if [ -e /var/run/nginx.pid ]; then
+  echo "### Stopping nginx ..."
+  nginx -s quit
+  for i in {1..50}; do
+    if [ -e /var/run/nginx.pid ]; then
+      pid=$(cat /var/run/nginx.pid)
+      if kill -0 $pid 2>/dev/null; then
+        sleep 0.1
+        continue
+      fi
+    fi
+    break
+  done
+fi
+
 # We move back the original config
 mv /tmp/nginx/*.conf /etc/nginx/conf.d/.
-
-# Reload nginx
-nginx -s reload
-echo "### Waiting for nginx to reload ..."
-wait -n
 
 if [[ "${SMNRP_ENABLE_ANALYTICS}" == 'true' ]]; then
   sh -c "/analyser.sh"
@@ -689,9 +699,12 @@ echo "### Starting nginx reloader in background"
 sh -c "/reloader.sh" &
 
 if [ ! -z $@ ]; then
-  $@
+  $@ &
 else
   # We start the certbot observer to check every 12h if a certificate has expired
   echo "### Starting certbot renewal in background"
-  sh -c "/renewer.sh"
+  sh -c "/renewer.sh" &
 fi
+
+echo "### Starting nginx in foreground"
+exec nginx -g 'daemon off;'
